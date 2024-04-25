@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:excel/excel.dart';
+import 'package:odk_remake/FormQuestionFormat.dart';
+import 'package:odk_remake/FormQuestionWidget.dart';
+import 'dart:io';
+
+import 'package:odk_remake/TextQuestionWidget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -56,7 +62,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
+  bool readExcel = false;
+  List<FormQuestionFormat> formFormats = [];
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -68,8 +75,141 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Future<void> parseData(String filePath) async {
+    var bytes = File(filePath).readAsBytesSync();
+    var excel = Excel.decodeBytes(bytes);
+
+    for (var table in excel.tables.keys) {
+      for (var row in excel.tables[table]!.rows) {
+        String type = row[0] == null ? "n/a" : row[0]!.value.toString();
+        String name = row[1] == null ? "n/a" : row[1]!.value.toString();
+        String label = row[2] == null ? "n/a" : row[2]!.value.toString();
+        String parameters = row[13] == null ? "n/a" : row[13]!.value.toString();
+        bool required =
+            row[4] == null ? false : row[4]!.value.toString() == "yes";
+        String relevant = row[5] == null ? "n/a" : row[5]!.value.toString();
+
+        FormQuestionFormat? format;
+        switch (type) {
+          case "text":
+            print("Input matches QuestionType.Text");
+            format = FormQuestionFormat(
+                questionType: QuestionType.Text,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "email":
+            print("Input matches QuestionType.Text");
+            format = FormQuestionFormat(
+                questionType: QuestionType.Text,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "note":
+            print("Input matches QuestionType.Text");
+            format = FormQuestionFormat(
+                questionType: QuestionType.Text,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "integer":
+            print("Input matches QuestionType.Text");
+            format = FormQuestionFormat(
+                questionType: QuestionType.Text,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "numeric":
+            print("Input matches QuestionType.Text");
+            format = FormQuestionFormat(
+                questionType: QuestionType.Text,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "date":
+            print("Input matches QuestionType.Date");
+            format = FormQuestionFormat(
+                questionType: QuestionType.Date,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "time":
+            print("Input matches QuestionType.Time");
+            format = FormQuestionFormat(
+                questionType: QuestionType.Time,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "select_one":
+            print("Input matches QuestionType.SelectOne");
+            format = FormQuestionFormat(
+                questionType: QuestionType.SelectOne,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "likert_scale":
+            print("Input matches QuestionType.SelectOne");
+            format = FormQuestionFormat(
+                questionType: QuestionType.SelectOne,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          case "select_multiple":
+            print("Input matches QuestionType.SelectMultiple");
+            format = FormQuestionFormat(
+                questionType: QuestionType.SelectMultiple,
+                name: name,
+                label: label,
+                parameters: parameters,
+                required: required,
+                relevant: relevant);
+            break;
+          default:
+            print("Input type is not yet supported.");
+        }
+
+        if (format != null) {
+          formFormats.add(format);
+        }
+      }
+    }
+    print(formFormats);
+    readExcel = true;
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!readExcel) {
+      // Hard-code the data for now
+      parseData('form_data/test/simple.xlsx');
+    }
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
