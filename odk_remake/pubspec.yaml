@@ -29,6 +29,8 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   excel: ^4.0.3
+  survey_kit: ^0.1.1
+
 //add the following dependencies http:, flutter_pdfview:, path_provider:
   flutter:
     sdk: flutter
