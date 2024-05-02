@@ -20,7 +20,7 @@ List<TextChoice> parseSelectChoices(String listName) {
       if (list_name == listName) {
         String name = row[1] == null ? "n/a" : row[1]!.value.toString();
         String label = row[2] == null ? "n/a" : row[2]!.value.toString();
-        TextChoice textChoice = TextChoice(text: name, value: label);
+        TextChoice textChoice = TextChoice(text: label, value: name);
         selectChoices.add(textChoice);
       }
     }
@@ -133,7 +133,7 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
       case "likert_scale":
         print("Input matches QuestionType.LikertScale");
         // parse the 2nd file for choices
-        String listName = name.split(" ")[1];
+        String listName = typeString.split(" ")[1];
         format = FormQuestionFormat(
             questionType: QuestionType.LikertScale,
             name: name,
@@ -145,7 +145,7 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
         break;
       case "select_multiple":
         print("Input matches QuestionType.SelectMultiple");
-        String listName = name.split(" ")[1];
+        String listName = typeString.split(" ")[1];
         format = FormQuestionFormat(
             questionType: QuestionType.SelectMultiple,
             name: name,
