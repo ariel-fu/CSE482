@@ -2,13 +2,14 @@ import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:odk_remake/FormQuestionFormat.dart';
 import 'package:odk_remake/NameLabelTuple.dart';
+import 'package:survey_kit/survey_kit.dart';
 
 const String SURVEY_TABLE = 'survey';
 const String SELECT_CHOICES_TABLE = 'choices';
 String filePath = "";
 
-List<NameLabelTuple> parseSelectChoices(String listName) {
-  List<NameLabelTuple> selectChoices = [];
+List<TextChoice> parseSelectChoices(String listName) {
+  List<TextChoice> selectChoices = [];
   var bytes = File(filePath).readAsBytesSync();
   var excel = Excel.decodeBytes(bytes);
 
@@ -19,9 +20,8 @@ List<NameLabelTuple> parseSelectChoices(String listName) {
       if (list_name == listName) {
         String name = row[1] == null ? "n/a" : row[1]!.value.toString();
         String label = row[2] == null ? "n/a" : row[2]!.value.toString();
-        NameLabelTuple nameLabelTuple =
-            NameLabelTuple(name: name, label: label);
-        selectChoices.add(nameLabelTuple);
+        TextChoice textChoice = TextChoice(text: label, value: name);
+        selectChoices.add(textChoice);
       }
     }
   }
@@ -36,7 +36,9 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
   var excel = Excel.decodeBytes(bytes);
   for (var row in excel.tables[SURVEY_TABLE]!.rows) {
     String typeString = row[0] == null ? "n/a" : row[0]!.value.toString();
-    String type = typeString.split(" ").length > 1 ? typeString.split(" ")[0] : typeString;
+    String type = typeString.split(" ").length > 1
+        ? typeString.split(" ")[0]
+        : typeString;
     String name = row[1] == null ? "n/a" : row[1]!.value.toString();
     String label = row[2] == null ? "n/a" : row[2]!.value.toString();
     String parameters = row[13] == null ? "n/a" : row[13]!.value.toString();
@@ -56,9 +58,9 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             relevant: relevant);
         break;
       case "email":
-        print("Input matches QuestionType.Text");
+        print("Input matches QuestionType.Email");
         format = FormQuestionFormat(
-            questionType: QuestionType.Text,
+            questionType: QuestionType.Email,
             name: name,
             label: label,
             parameters: parameters,
@@ -66,9 +68,9 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             relevant: relevant);
         break;
       case "note":
-        print("Input matches QuestionType.Text");
+        print("Input matches QuestionType.Note");
         format = FormQuestionFormat(
-            questionType: QuestionType.Text,
+            questionType: QuestionType.Note,
             name: name,
             label: label,
             parameters: parameters,
@@ -76,9 +78,9 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             relevant: relevant);
         break;
       case "integer":
-        print("Input matches QuestionType.Text");
+        print("Input matches QuestionType.Integer");
         format = FormQuestionFormat(
-            questionType: QuestionType.Text,
+            questionType: QuestionType.Integer,
             name: name,
             label: label,
             parameters: parameters,
@@ -86,9 +88,9 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             relevant: relevant);
         break;
       case "numeric":
-        print("Input matches QuestionType.Text");
+        print("Input matches QuestionType.Numeric");
         format = FormQuestionFormat(
-            questionType: QuestionType.Text,
+            questionType: QuestionType.Numeric,
             name: name,
             label: label,
             parameters: parameters,
@@ -129,11 +131,11 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             answerChoices: parseSelectChoices(listName));
         break;
       case "likert_scale":
-        print("Input matches QuestionType.SelectOne");
+        print("Input matches QuestionType.LikertScale");
         // parse the 2nd file for choices
-        String listName = name.split(" ")[1];
+        String listName = typeString.split(" ")[1];
         format = FormQuestionFormat(
-            questionType: QuestionType.SelectOne,
+            questionType: QuestionType.LikertScale,
             name: name,
             label: label,
             parameters: parameters,
@@ -143,7 +145,7 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
         break;
       case "select_multiple":
         print("Input matches QuestionType.SelectMultiple");
-        String listName = name.split(" ")[1];
+        String listName = typeString.split(" ")[1];
         format = FormQuestionFormat(
             questionType: QuestionType.SelectMultiple,
             name: name,
@@ -156,11 +158,11 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
       default:
     }
 
-    print(format.toString());
+    // print the data parsed from the excel
+    // print(format.toString());
 
     if (format != null) {
       formFormats[name] = format;
-      
     }
   }
   return formFormats;
