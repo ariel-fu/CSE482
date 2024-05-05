@@ -1,11 +1,8 @@
-import 'dart:io';
-import 'package:excel/excel.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
-import '../models/excel_file.dart';
-import '../widgets/excel_Item.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart'; // Import for accessing clipboard
+import 'package:odk_remake/models/excel_file.dart';
+import '../widgets/excel_item.dart';
+import '../services/url_download.dart';
 
 class SavedExcelScreen extends StatefulWidget {
   @override
@@ -14,6 +11,7 @@ class SavedExcelScreen extends StatefulWidget {
 
 class _SavedExcelScreenState extends State<SavedExcelScreen> {
   List<ExcelFile> _savedFiles = [];
+  List<ExcelFile> _selectedFiles = [];
 
   @override
   void initState() {
@@ -21,112 +19,145 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
     super.initState();
   }
 
-  
   void _loadSavedFiles() async {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String>? savedFileNames = prefs.getStringList('savedFileNames');
-
-      if (savedFileNames != null) {
-        List<ExcelFile> files = [];
-        for (var fileName in savedFileNames) {
-          Directory directory = await getApplicationDocumentsDirectory();
-          files.add(ExcelFile(name: fileName, path: '${directory.path}/$fileName'));
-        }
-        setState(() {
-          _savedFiles = files;
-        });
-      }
+    _savedFiles = await loadSavedFiles(); // Load saved files from data file
+    setState(() {});
   }
 
-
-
-
   Future<void> _addExcelFile() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['xlsx'],
-    );
-
-    if (result != null) {
-      PlatformFile platformFile = result.files.single;
-      String? fileName = platformFile.name;
-      String? filePath = platformFile.path;
-
-      if (fileName != null && filePath != null) {
-        try {
-          File file = File(filePath);
-          
-          List<int> bytes = await file.readAsBytes();
-
-          // Save the file to app directory
-          Directory appDirectory = await getApplicationDocumentsDirectory();
-          String savedFilePath = '${appDirectory.path}/$fileName';
-          await file.copy(savedFilePath);
-
-          setState(() {
-            _savedFiles.add(ExcelFile(name: fileName, path: savedFilePath));
-            List<String> savedFileNames = _savedFiles.map((file) => file.name).toList();
-            prefs.setStringList('savedFileNames', savedFileNames);
-          });
-        } catch (e) {
-          print('Error saving file: $e');
-        }
-      } else {
-        print('Error: File name or path are null');
-      }
-    }
+    await addExcelFile(); // Add Excel file from data file
+    // Reload the files
+    List<ExcelFile> updatedFiles = await loadSavedFiles();
+    setState(() {
+      _savedFiles = updatedFiles;
+    });
   }
 
   Future<void> _deleteExcelFile(ExcelFile file) async {
+    await deleteExcelFile(file); // Delete Excel file from data file
+    List<ExcelFile> updatedFiles = await loadSavedFiles();
     setState(() {
-      _savedFiles.remove(file);
+      _savedFiles = updatedFiles; // Update the list of saved files
     });
+  }
 
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String>? savedFileNames = prefs.getStringList('savedFilesNames');
+  Future<void> _saveSavedFiles(List<ExcelFile> files) async {
+    await saveSavedFiles(files); // Save files to data file
+    List<ExcelFile> updatedFiles = await loadSavedFiles();
+    setState(() {
+      _savedFiles = updatedFiles; // Update the list of saved files
+    });
+  }
 
-      if (savedFileNames != null && savedFileNames.contains(file.name)) {
-        savedFileNames.remove(file.name);
-        await prefs.setStringList('savedFilesNames', savedFileNames);
+  void _toggleSelected(ExcelFile file) {
+    setState(() {
+      if (_selectedFiles.contains(file)) {
+        _selectedFiles.remove(file);
+      } else {
+        _selectedFiles.add(file);
       }
+    });
+  }
 
-      File fileToDelete = File(file.name);
-      if(await fileToDelete.exists()) {
-        await fileToDelete.delete();
-      }
+  void _deleteSelectedFiles() async {
+    for (var file in _selectedFiles) {
+      await _deleteExcelFile(file);
+    }
+    _selectedFiles.clear();
+  }
 
-    } catch (e) {
-      print('Error deleting file: $e');
+  void _handleAddAction(String value) {
+    if (value == 'local') {
+      _addExcelFile();
+    } else if (value == 'url') {
+      _showURLDialog();
     }
   }
 
-  Future<void> _saveSavedFiles() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+  // Function to show the URL input dialog
+  Future<void> _showURLDialog() async {
+    TextEditingController _urlController = TextEditingController(); // Controller for URL input
+    final ClipboardData? clipboardData = await Clipboard.getData('text/plain'); // Get text from clipboard
+    String? pastedText = clipboardData?.text;
 
-    await prefs.remove('savedFileNames');
-
-    List<String> savedFileNames = _savedFiles.map((file) => file.name).toList();
-    await prefs.setStringList('savedFileNames', savedFileNames);
-    // No need to copy files, we are storing their names only
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter URL'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _urlController,
+                decoration: InputDecoration(
+                  hintText: 'Enter URL',
+                ),
+              ),
+              if (pastedText != null && pastedText.isNotEmpty) // Show paste option if clipboard has text
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _urlController.text = pastedText!;
+                    });
+                  },
+                  child: Text('Paste'),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Call function to handle getting file from URL
+                String url = _urlController.text;
+                Navigator.of(context).pop();
+                // Call the function to download and add Excel file from URL
+                downloadExcelFileAndAddToStorage(url);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
-
 
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Saved Excel Files'),
+        title: Text('Saved Forms'),
         actions: [
+          // Replace IconButton with PopupMenuButton
+          PopupMenuButton<String>(
+            icon: Icon(Icons.add), // Set the icon for the dropdown button
+            onSelected: _handleAddAction,
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'local',
+                  child: Text('Get from Local Storage'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'url',
+                  child: Text('Get from URL'),
+                ),
+              ];
+            },
+          ),
           IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _addExcelFile,
+            icon: Icon(Icons.delete),
+            onPressed: _deleteSelectedFiles, // Delete selected files
           ),
           IconButton(
             icon: Icon(Icons.save),
-            onPressed: _saveSavedFiles,
+            onPressed: () => _saveSavedFiles(_savedFiles),
           ),
         ],
       ),
@@ -138,9 +169,10 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               itemCount: _savedFiles.length,
               itemBuilder: (context, index) {
                 ExcelFile file = _savedFiles[index];
-                return ExcelItem(
-                  excelFile: file,
-                  onDelete: () => _deleteExcelFile(file),
+                return CheckboxListTile(
+                  title: Text(file.name),
+                  value: _selectedFiles.contains(file),
+                  onChanged: (_) => _toggleSelected(file),
                 );
               },
             ),
