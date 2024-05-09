@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
-import 'package:odk_remake/FormQuestionFormat.dart';
-import 'package:odk_remake/NameLabelTuple.dart';
+import 'package:odk_remake/models/FormQuestionFormat.dart';
 import 'package:survey_kit/survey_kit.dart';
 
 const String SURVEY_TABLE = 'survey';

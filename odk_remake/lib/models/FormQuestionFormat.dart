@@ -1,4 +1,3 @@
-import 'package:odk_remake/NameLabelTuple.dart';
 import 'package:survey_kit/survey_kit.dart';
 
 enum QuestionType {
