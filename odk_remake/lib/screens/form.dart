@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:odk_remake/models/FormQuestionFormat.dart';
+import 'package:odk_remake/models/excel_file.dart'; // Import ExcelFile
 import 'package:flutter/cupertino.dart';
 
 import 'package:odk_remake/services/parseData.dart';
@@ -10,10 +11,12 @@ import 'package:survey_kit/survey_kit.dart' as survey_kit;
 
 
 class Form extends StatefulWidget {
-  const Form({super.key});
+  final ExcelFile excelFile; // Add this
+
+  const Form({Key? key, required this.excelFile}) : super(key: key); // Modify this
 
   // This widget is the root of your application.
-@override
+  @override
   State<Form> createState() => _FormPageState();
 }
 
@@ -27,7 +30,7 @@ class _FormPageState extends State<Form> {
     print("here!!");
     // for each valid form format, create the widget
     if (!readExcel) {
-      formFormats = parseQuestionFormatData('form_data/test/simple.xlsx');
+      formFormats = parseQuestionFormatData(widget.excelFile.path); // Modify this
       readExcel = true;
     }
 

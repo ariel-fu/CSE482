@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'screens/form.dart' as odk_remake;
 import 'screens/SavedExcelScreen.dart';
+import 'screens/StartAFormScreen.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -34,7 +35,7 @@ class _HomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             ElevatedButton(
-              child: const Text('Saved files'),
+              child: const Text('Files'),
               onPressed: () => Navigator.push(context,
                   MaterialPageRoute(builder: (context) => SavedExcelScreen())),
             ),
@@ -42,9 +43,9 @@ class _HomePage extends StatelessWidget {
               height: 20,
             ),
             ElevatedButton(
-              child: const Text('Create a form'),
+              child: const Text('Start a form'),
               onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => odk_remake.Form())),
+                  MaterialPageRoute(builder: (context) => StartAFormScreen())),
             ),
           ],
         ),
