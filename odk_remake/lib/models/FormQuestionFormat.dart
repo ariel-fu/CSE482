@@ -55,25 +55,25 @@ class FormQuestionFormat {
       case QuestionType.Text:
         print("Input matches QuestionType.Text");
         step = QuestionStep(
-            title: name, text: label, answerFormat: const TextAnswerFormat());
+            title: name, text: label, answerFormat: const TextAnswerFormat(), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.Email:
         print("Input matches QuestionType.Email");
         step = QuestionStep(
-            title: name, text: label, answerFormat: const TextAnswerFormat());
+            title: name, text: label, answerFormat: const TextAnswerFormat(), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.Note:
         print("Input matches QuestionType.Note");
         // TODO: identify what a note is
         step = QuestionStep(
-            title: name, text: label, answerFormat: const TextAnswerFormat());
+            title: name, text: label, answerFormat: const TextAnswerFormat(), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.Integer:
         print("Input matches QuestionType.Integer");
         step = QuestionStep(
             title: name,
             text: label,
-            answerFormat: const IntegerAnswerFormat());
+            answerFormat: const IntegerAnswerFormat(), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.Numeric:
         print("Input matches QuestionType.Numeric");
@@ -81,17 +81,17 @@ class FormQuestionFormat {
         step = QuestionStep(
             title: name,
             text: label,
-            answerFormat: const IntegerAnswerFormat());
+            answerFormat: const IntegerAnswerFormat(), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.Date:
         print("Input matches QuestionType.Date");
         step = QuestionStep(
-            title: name, text: label, answerFormat: DateAnswerFormat());
+            title: name, text: label, answerFormat: DateAnswerFormat(), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.Time:
         print("Input matches QuestionType.Time");
         step = QuestionStep(
-            title: name, text: label, answerFormat: const TimeAnswerFormat());
+            title: name, text: label, answerFormat: const TimeAnswerFormat(), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.SelectOne:
         print("Input matches QuestionType.SelectOne");
@@ -99,7 +99,7 @@ class FormQuestionFormat {
         step = QuestionStep(
             title: name,
             text: label,
-            answerFormat: SingleChoiceAnswerFormat(textChoices: answerChoices));
+            answerFormat: SingleChoiceAnswerFormat(textChoices: answerChoices), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.LikertScale:
         print("Input matches QuestionType.LikertScale");
@@ -107,7 +107,7 @@ class FormQuestionFormat {
         step = QuestionStep(
             title: name,
             text: label,
-            answerFormat: SingleChoiceAnswerFormat(textChoices: answerChoices));
+            answerFormat: SingleChoiceAnswerFormat(textChoices: answerChoices), stepIdentifier: StepIdentifier(id: name));
         break;
       case QuestionType.SelectMultiple:
         print("Input matches QuestionType.SelectMultiple");
@@ -115,7 +115,7 @@ class FormQuestionFormat {
         step = QuestionStep(
             title: name,
             text: label,
-            answerFormat: MultipleChoiceAnswerFormat(textChoices: answerChoices));
+            answerFormat: MultipleChoiceAnswerFormat(textChoices: answerChoices), stepIdentifier: StepIdentifier(id: name));
         break;
       default:
     }
