@@ -7,10 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ExcelFile {
   final String name;
   final String path;
+  String status; // Updated property
 
   ExcelFile({
     required this.name,
     required this.path,
+    required this.status,
   });
 }
 
@@ -21,7 +23,8 @@ Future<List<ExcelFile>> loadSavedFiles() async {
   List<ExcelFile> files = [];
   for (var fileName in savedFileNames) {
     Directory directory = await getApplicationDocumentsDirectory();
-    files.add(ExcelFile(name: fileName, path: '${directory.path}/$fileName'));
+    String? status = prefs.getString(fileName); // Load status from SharedPreferences
+    files.add(ExcelFile(name: fileName, path: '${directory.path}/$fileName', status: status ?? 'draft')); // Default to 'draft' if status is null
   }
   return files;
 }
@@ -52,6 +55,9 @@ Future<void> addExcelFile() async {
         List<String> savedFileNames = prefs.getStringList('savedFileNames') ?? [];
         savedFileNames.add(fileName);
         await prefs.setStringList('savedFileNames', savedFileNames);
+
+        // Set default status to 'draft' when adding a new file
+        await prefs.setString(fileName, 'new');
       } catch (e) {
         print('Error saving file: $e');
       }
@@ -92,4 +98,24 @@ Future<void> saveSavedFiles(List<ExcelFile> savedFiles) async {
   List<String> savedFileNames = savedFiles.map((file) => file.name).toList();
   await prefs.setStringList('savedFileNames', savedFileNames);
   // No need to copy files, we are storing their names only
+}
+
+Future<void> markCompletedExcelFile(ExcelFile file) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString(file.status, 'completed');
+}
+
+Future<void> markDraftExcelFile(ExcelFile file) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString(file.status, 'draft');
+}
+
+Future<void> markNewExcelFile(ExcelFile file) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString(file.status, 'new');
+}
+
+Future<void> markSentExcelFile(ExcelFile file) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString(file.status, 'sent');
 }

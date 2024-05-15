@@ -19,6 +19,31 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
     super.initState();
   }
 
+  void _markDraftExcel(ExcelFile file) {
+    setState(() {
+      file.status = 'draft';
+    });
+  }
+
+  void _markCompletedExcelFile(ExcelFile file) {
+    setState(() {
+      file.status = 'completed';
+    });
+  }
+
+  void _markNewExcelFile(ExcelFile file) {
+    setState(() {
+      file.status = 'new';
+    });
+  }
+
+  void _markSentExcelFile(ExcelFile file) {
+    setState(() {
+      file.status = 'sent';
+    });
+  }
+
+
   void _loadSavedFiles() async {
     _savedFiles = await loadSavedFiles(); // Load saved files from data file
     setState(() {});
@@ -132,7 +157,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Saved Forms'),
+        title: Text('Forms'),
         actions: [
           // Replace IconButton with PopupMenuButton
           PopupMenuButton<String>(
@@ -161,22 +186,89 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
           ),
         ],
       ),
-      body: _savedFiles.isEmpty
-          ? Center(
-              child: Text('No files saved yet.'),
-            )
-          : ListView.builder(
-              itemCount: _savedFiles.length,
-              itemBuilder: (context, index) {
-                ExcelFile file = _savedFiles[index];
-                return CheckboxListTile(
-                  title: Text(file.name),
-                  value: _selectedFiles.contains(file),
-                  onChanged: (_) => _toggleSelected(file),
-                );
-              },
-            ),
+      body: 
+        Padding(
+          padding: EdgeInsets.all(20.0), // Add padding from the walls of the screen
+          child: GridView.count(
+            crossAxisCount: 2, // Display 2 buttons in each row
+            mainAxisSpacing: 10.0, // Add vertical spacing between buttons
+            crossAxisSpacing: 10.0, // Add horizontal spacing between buttons
+            children: List.generate(4, (index) {
+              IconData iconData = Icons.article_rounded;
+              String buttonText = '';
+              Color iconColor = Colors.white;
+              if (index == 0) {
+                iconData = Icons.article_rounded;
+                buttonText = 'Drafts';
+              } else if (index == 1) {
+                iconData = Icons.check_circle_rounded;
+                buttonText = 'Completed Forms';
+              } else if (index == 2) {
+                iconData = Icons.edit;
+                buttonText = 'New Forms';
+              } else if (index == 3) {
+                iconData = Icons.send;
+                buttonText = 'Sent Forms';
+              }
+              return ElevatedButton.icon(
+                onPressed: () {
+                  if (index == 0) {
+                    Navigator.push(context, 
+                      MaterialPageRoute(builder: (context) => ListButtons(type: 'Drafts', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                  } else if (index == 1) {
+                    Navigator.push(context, 
+                      MaterialPageRoute(builder: (context) => ListButtons(type: 'Completed Forms', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                  } else if (index == 2) {
+                    Navigator.push(context, 
+                      MaterialPageRoute(builder: (context) => ListButtons(type: 'New Forms', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                  } else if (index == 3) {
+                    Navigator.push(context, 
+                      MaterialPageRoute(builder: (context) => ListButtons(type: 'Sent Forms', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                  }
+                },
+                icon: Icon(iconData, color: iconColor,), // Add icon here
+                label: Text(buttonText, style: TextStyle(color: Colors.white)), // Set text color to white
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 161, 213, 255),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+              );
+            }),
+          ),
+      )
     );
+  }
+}
+
+class ListButtons extends StatelessWidget {
+  final String type;
+  final List<ExcelFile> savedFiles;
+  final Function(ExcelFile) toggleSelected;
+  final List<ExcelFile> selectedFiles;
+
+  ListButtons({required this.type, required this.savedFiles, required this.toggleSelected, required this.selectedFiles});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(type),
+      ),
+    body: ListView.builder(
+      itemCount: savedFiles.length,
+      itemBuilder: (context, index) {
+        ExcelFile file = savedFiles[index];
+        return CheckboxListTile(
+          title: Text(file.name),
+          value: selectedFiles.contains(file),
+          onChanged: (_) => toggleSelected(file),
+        );
+      }
+      
+    ),
+    );
+    
   }
 }
 
