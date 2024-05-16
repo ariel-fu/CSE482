@@ -3,6 +3,7 @@ import 'package:flutter/services.dart'; // Import for accessing clipboard
 import 'package:odk_remake/models/excel_file.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
+import 'form.dart' as odk_remake;
 
 class SavedExcelScreen extends StatefulWidget {
   @override
@@ -17,7 +18,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   @override
   void initState() {
     _loadSavedFiles();
-    isDraft = ModalRoute.of(context)!.settings.arguments as bool;
+    //isDraft = ModalRoute.of(context)!.settings.arguments as bool;
     super.initState();
   }
 
@@ -109,8 +110,14 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
     }
   }
 
+  // void navigateToForm(ExcelFile file) {
+  //   Navigator.push(context, 
+  //     //MaterialPageRoute(builder: (context) => Form()));
+  // }
+
   // Function to show the URL input dialog
   Future<void> _showURLDialog() async {
+
     TextEditingController _urlController = TextEditingController(); // Controller for URL input
     final ClipboardData? clipboardData = await Clipboard.getData('text/plain'); // Get text from clipboard
     String? pastedText = clipboardData?.text;
@@ -163,6 +170,8 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
     );
   }
 
+
+
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -181,18 +190,10 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                 ),
                 PopupMenuItem<String>(
                   value: 'url',
-                  child: Text('Get from URL'),
+                  child: Text('null'),
                 ),
               ];
             },
-          ),
-          IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: _deleteSelectedFiles, // Delete selected files
-          ),
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: () => _saveSavedFiles(_savedFiles),
           ),
         ],
       ),
@@ -212,13 +213,13 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                 buttonText = 'Drafts';
               } else if (index == 1) {
                 iconData = Icons.check_circle_rounded;
-                buttonText = 'Completed Forms';
+                buttonText = 'Completed';
               } else if (index == 2) {
                 iconData = Icons.edit;
-                buttonText = 'New Forms';
+                buttonText = 'New';
               } else if (index == 3) {
                 iconData = Icons.send;
-                buttonText = 'Sent Forms';
+                buttonText = 'Sent';
               }
               return ElevatedButton.icon(
                 onPressed: () {
@@ -258,21 +259,26 @@ class ListButtons extends StatefulWidget {
   final Function toggleSelected;
   final List<ExcelFile> selectedFiles;
 
-  ListButtons({required this.type, required this.savedFiles, required this.toggleSelected, required this.selectedFiles});
+  ListButtons({
+    required this.type,
+    required this.savedFiles,
+    required this.toggleSelected,
+    required this.selectedFiles,
+  });
 
   @override
   _ListButtonsState createState() => _ListButtonsState();
 }
 
 class _ListButtonsState extends State<ListButtons> {
-  bool isDraft = false;
 
-  @override
-  void initState() {
-    isDraft = ModalRoute.of(context)!.settings.arguments as bool;
-    super.initState();
+  void _startForm(ExcelFile file) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => (odk_remake.Form(excelFile: file))));
   }
-  
+
   @override
   Widget build(BuildContext context) {
     List<ExcelFile> filteredFiles = widget.savedFiles.where((file) {
@@ -299,11 +305,10 @@ class _ListButtonsState extends State<ListButtons> {
           ExcelFile file = filteredFiles[index];
 
           return Dismissible(
-            key: Key(file.name), // Key to identify the ListTile
+            key: Key(file.name),
             onDismissed: (direction) {
               setState(() {
-                // Remove the item from the list when dismissed
-                deleteExcelFile(file); // Delete the file from storage
+                deleteExcelFile(file);
                 widget.savedFiles.remove(file);
               });
               ScaffoldMessenger.of(context).showSnackBar(
@@ -324,21 +329,16 @@ class _ListButtonsState extends State<ListButtons> {
             ),
             child: ListTile(
               title: Text(file.name),
-              // Placeholder, not interactive
+              trailing: IconButton(
+                icon: Icon(Icons.arrow_forward),
+                onPressed: () {
+                  _startForm(file);
+                },
+              ),
             ),
           );
-        }
+        },
       ),
     );
   }
-}
-
-
-
-
-
-void main() {
-  runApp(MaterialApp(
-    home: SavedExcelScreen(),
-  ));
 }
