@@ -12,10 +12,12 @@ class SavedExcelScreen extends StatefulWidget {
 class _SavedExcelScreenState extends State<SavedExcelScreen> {
   List<ExcelFile> _savedFiles = [];
   List<ExcelFile> _selectedFiles = [];
+  bool isDraft = false;
 
   @override
   void initState() {
     _loadSavedFiles();
+    isDraft = ModalRoute.of(context)!.settings.arguments as bool;
     super.initState();
   }
 
@@ -40,6 +42,14 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   void _markSentExcelFile(ExcelFile file) {
     setState(() {
       file.status = 'sent';
+    });
+  }
+
+  void checkDraft(bool isDraft, ExcelFile file) {
+    setState(() {
+      if(isDraft) {
+        file.status = 'draft';
+      }
     });
   }
 
@@ -242,35 +252,90 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   }
 }
 
-class ListButtons extends StatelessWidget {
+class ListButtons extends StatefulWidget {
   final String type;
   final List<ExcelFile> savedFiles;
-  final Function(ExcelFile) toggleSelected;
+  final Function toggleSelected;
   final List<ExcelFile> selectedFiles;
 
   ListButtons({required this.type, required this.savedFiles, required this.toggleSelected, required this.selectedFiles});
+
+  @override
+  _ListButtonsState createState() => _ListButtonsState();
+}
+
+class _ListButtonsState extends State<ListButtons> {
+  bool isDraft = false;
+
+  @override
+  void initState() {
+    isDraft = ModalRoute.of(context)!.settings.arguments as bool;
+    super.initState();
+  }
+  
   @override
   Widget build(BuildContext context) {
+    List<ExcelFile> filteredFiles = widget.savedFiles.where((file) {
+      switch (widget.type) {
+        case 'Drafts':
+          return file.status == 'draft';
+        case 'Completed Forms':
+          return file.status == 'completed';
+        case 'New Forms':
+          return file.status == 'new';
+        case 'Sent Forms':
+          return file.status == 'sent';
+        default:
+          return false;
+      }
+    }).toList();
     return Scaffold(
       appBar: AppBar(
-        title: Text(type),
+        title: Text(widget.type),
       ),
-    body: ListView.builder(
-      itemCount: savedFiles.length,
-      itemBuilder: (context, index) {
-        ExcelFile file = savedFiles[index];
-        return CheckboxListTile(
-          title: Text(file.name),
-          value: selectedFiles.contains(file),
-          onChanged: (_) => toggleSelected(file),
-        );
-      }
-      
-    ),
+      body: ListView.builder(
+        itemCount: filteredFiles.length,
+        itemBuilder: (context, index) {
+          ExcelFile file = filteredFiles[index];
+
+          return Dismissible(
+            key: Key(file.name), // Key to identify the ListTile
+            onDismissed: (direction) {
+              setState(() {
+                // Remove the item from the list when dismissed
+                deleteExcelFile(file); // Delete the file from storage
+                widget.savedFiles.remove(file);
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("${file.name} dismissed"),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            background: Container(
+              color: Colors.red,
+              alignment: Alignment.centerRight,
+              padding: EdgeInsets.symmetric(horizontal: 20.0),
+              child: Icon(
+                Icons.delete,
+                color: Colors.white,
+              ),
+            ),
+            child: ListTile(
+              title: Text(file.name),
+              // Placeholder, not interactive
+            ),
+          );
+        }
+      ),
     );
-    
   }
 }
+
+
+
+
 
 void main() {
   runApp(MaterialApp(

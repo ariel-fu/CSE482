@@ -24,6 +24,7 @@ Future<List<ExcelFile>> loadSavedFiles() async {
   for (var fileName in savedFileNames) {
     Directory directory = await getApplicationDocumentsDirectory();
     String? status = prefs.getString(fileName); // Load status from SharedPreferences
+  
     files.add(ExcelFile(name: fileName, path: '${directory.path}/$fileName', status: status ?? 'draft')); // Default to 'draft' if status is null
   }
   return files;
@@ -42,10 +43,10 @@ Future<void> addExcelFile() async {
     String? fileName = platformFile.name;
     String? filePath = platformFile.path;
 
-    if (fileName != null && filePath != null) {
+    if (filePath != null) {
       try {
         File file = File(filePath);
-        List<int> bytes = await file.readAsBytes();
+       // List<int> bytes = await file.readAsBytes();
 
         // Save the file to app directory
         Directory appDirectory = await getApplicationDocumentsDirectory();
@@ -56,7 +57,6 @@ Future<void> addExcelFile() async {
         savedFileNames.add(fileName);
         await prefs.setStringList('savedFileNames', savedFileNames);
 
-        // Set default status to 'draft' when adding a new file
         await prefs.setString(fileName, 'new');
       } catch (e) {
         print('Error saving file: $e');
