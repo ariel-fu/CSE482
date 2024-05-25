@@ -7,6 +7,26 @@ const String SURVEY_TABLE = 'survey';
 const String SELECT_CHOICES_TABLE = 'choices';
 String filePath = "";
 
+List<String> parseSelectChoicesString(String listName) {
+  List<String> selectChoices = [];
+  var bytes = File(filePath).readAsBytesSync();
+  var excel = Excel.decodeBytes(bytes);
+
+  if (excel.tables.containsKey(SELECT_CHOICES_TABLE)) {
+    for (var row in excel.tables[SELECT_CHOICES_TABLE]!.rows) {
+      // [list_name, name, label, image(?)]
+      String list_name = row[0] == null ? "n/a" : row[0]!.value.toString();
+      if (list_name == listName) {
+        String label = row[2] == null ? "n/a" : row[2]!.value.toString();
+        selectChoices.add(label);
+      }
+    }
+  }
+
+  return selectChoices;
+}
+
+
 List<TextChoice> parseSelectChoices(String listName) {
   List<TextChoice> selectChoices = [];
   var bytes = File(filePath).readAsBytesSync();
@@ -127,7 +147,7 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             parameters: parameters,
             required: required,
             relevant: relevant,
-            answerChoices: parseSelectChoices(listName));
+            answerChoices: parseSelectChoicesString(listName));
         break;
       case "likert_scale":
         print("Input matches QuestionType.LikertScale");
@@ -140,7 +160,7 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             parameters: parameters,
             required: required,
             relevant: relevant,
-            answerChoices: parseSelectChoices(listName));
+            answerChoices: parseSelectChoicesString(listName));
         break;
       case "select_multiple":
         print("Input matches QuestionType.SelectMultiple");
@@ -152,14 +172,13 @@ Map<String, FormQuestionFormat> parseQuestionFormatData(String input) {
             parameters: parameters,
             required: required,
             relevant: relevant,
-            answerChoices: parseSelectChoices(listName));
+            answerChoices: parseSelectChoicesString(listName));
         break;
       default:
     }
 
     // print the data parsed from the excel
     // print(format.toString());
-
     if (format != null) {
       formFormats[name] = format;
     }

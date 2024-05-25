@@ -31,6 +31,7 @@ dependencies:
   excel: ^4.0.3
   survey_kit: ^0.1.1
   csslib: ^0.17.0
+  intl: ^0.18.1
 
 //add the following dependencies http:, flutter_pdfview:, path_provider:
   flutter:
