@@ -42,7 +42,6 @@ class FormPageState extends State<Form> {
 
   @override
   Widget build(BuildContext context) {
-    print("here!!");
     // for each valid form format, create the widget
     if (!readExcel) {
       formFormats =
@@ -71,6 +70,9 @@ class FormPageState extends State<Form> {
       isRelevant = determineRelevancy(parameter, operation[1], operation[2]);
     }
 
+    if (!surveySteps.contains(currentQuestionIndex)) {
+      surveySteps.add(currentQuestionIndex);
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text('Survey'),
@@ -107,8 +109,11 @@ class FormPageState extends State<Form> {
                     return Container();
                   }
                   int questionIndex = surveySteps.elementAt(index);
+                  if (questionIndex >= questions.length) {
+                    return Container();
+                  }
                   String key = questions.elementAt(questionIndex).name;
-                  print(key);
+                  
                   return Padding(
                     padding: EdgeInsets.symmetric(
                         horizontal: 20), // Add horizontal padding
@@ -183,12 +188,10 @@ class FormPageState extends State<Form> {
                       : () {
                           if (currentQuestionIndex > 0) {
                             setState(() {
-                              surveyIndex--;
                               currentQuestionIndex =
-                                  surveySteps.elementAt(surveyIndex);
-                              // remove all elements in front
-                              surveySteps.removeRange(
-                                  surveyIndex + 1, surveySteps.length);
+                                  surveySteps.elementAt(surveySteps.length - 2);
+
+                              surveySteps.removeAt(surveySteps.length - 1);
                             });
                           }
                         },
@@ -200,8 +203,6 @@ class FormPageState extends State<Form> {
                   onPressed: isFinished
                       ? null
                       : () {
-                          surveySteps.add(currentQuestionIndex);
-                          surveyIndex++;
                           if (currentQuestionIndex < questions.length - 1) {
                             setState(() {
                               do {
@@ -223,7 +224,6 @@ class FormPageState extends State<Form> {
                           } else {
                             setState(() {
                               currentQuestionIndex++;
-                              print(answers); // Print the answers when done
                               isFinished = true;
                             });
                           }
@@ -264,19 +264,26 @@ class FormPageState extends State<Form> {
   }
 
   Widget _buildTextInput(String name) {
+    TextEditingController controller =
+        TextEditingController(text: answers[name]);
+
     return Center(
-        child: TextField(
-      key: ValueKey(name), // Provide a unique Key
-      onChanged: (value) {
-        answers[name] = value;
-      },
-    ));
+      child: TextField(
+        key: ValueKey(name),
+        controller: controller,
+        onChanged: (value) {
+          answers[name] = value;
+        },
+      ),
+    );
   }
 
   DateTime? selectedDate;
   Widget _buildDateInput(String name) {
+    selectedDate = answers[name] as DateTime?;
+
     return ElevatedButton(
-      key: ValueKey(name), // Provide a unique Key
+      key: ValueKey(name),
       child: Text('Select a date'),
       onPressed: () async {
         final DateTime? pickedDate = await showDatePicker(
@@ -287,6 +294,7 @@ class FormPageState extends State<Form> {
         );
         if (pickedDate != null && pickedDate != selectedDate) {
           setState(() {
+            selectedDate = pickedDate;
             answers[name] = pickedDate;
           });
         }
@@ -296,9 +304,10 @@ class FormPageState extends State<Form> {
 
   TimeOfDay? selectedTime;
   Widget _buildTimeInput(String name) {
-    return ElevatedButton(
-      key: ValueKey(name), // Provide a unique Key
+    selectedTime = answers[name] as TimeOfDay?;
 
+    return ElevatedButton(
+      key: ValueKey(name),
       child: Text('Select a time'),
       onPressed: () async {
         final TimeOfDay? pickedTime = await showTimePicker(
@@ -307,6 +316,7 @@ class FormPageState extends State<Form> {
         );
         if (pickedTime != null && pickedTime != selectedTime) {
           setState(() {
+            selectedTime = pickedTime;
             answers[name] = pickedTime;
           });
         }
@@ -316,41 +326,41 @@ class FormPageState extends State<Form> {
 
   String? selectedChoice;
   Widget _buildSingleChoiceInput(String name, List<String> choices) {
+    selectedChoice = answers[name] as String?;
+
     return Center(
-        child: SizedBox(
-      width: 500,
-      child: ListView.builder(
-        shrinkWrap: true,
-        key: ValueKey(name), // Provide a unique Key
-        itemCount: choices.length,
-        itemBuilder: (context, index) {
-          return RadioListTile<String>(
-            title: Text(choices[index]),
-            value: choices[index],
-            groupValue: selectedChoice,
-            onChanged: (String? value) {
-              setState(() {
-                answers[name] = value;
-                selectedChoice = value;
-                print(answers);
-              });
-            },
-          );
-        },
+      child: SizedBox(
+        width: 500,
+        child: ListView.builder(
+          shrinkWrap: true,
+          key: ValueKey(name),
+          itemCount: choices.length,
+          itemBuilder: (context, index) {
+            return RadioListTile<String>(
+              title: Text(choices[index]),
+              value: choices[index],
+              groupValue: selectedChoice,
+              onChanged: (String? value) {
+                setState(() {
+                  selectedChoice = value;
+                  answers[name] = value;
+                });
+              },
+            );
+          },
+        ),
       ),
-    ));
+    );
   }
 
   Map<String, bool> values = {};
   Widget _buildMultiChoiceInput(String name, List<String> choices) {
-    List<String> selectedChoices = [];
+    List<String> selectedChoices = answers[name] as List<String>? ?? [];
 
     for (String choice in choices) {
-      if (values[choice] == null) {
-        values[choice] = false;
-      }
+      values[choice] = selectedChoices.contains(choice);
     }
-    print("before $values");
+
     return Column(
       children: choices.map((choice) {
         return CheckboxListTile(
@@ -358,16 +368,13 @@ class FormPageState extends State<Form> {
           value: values[choice],
           onChanged: (bool? value) {
             setState(() {
-              print("$choice = $value");
               values[choice] = value!;
               if (values[choice] == true) {
                 selectedChoices.add(choice);
               } else {
                 selectedChoices.remove(choice);
               }
-              print("values: $values");
               answers[name] = selectedChoices;
-              print(answers);
             });
           },
         );
@@ -403,12 +410,10 @@ class FormPageState extends State<Form> {
   bool determineRelevancy(String parameter, String operator, String compareTo) {
     FormQuestionFormat? formQuestionFormat = formFormats[parameter];
     if (formQuestionFormat == null) {
-      print("$parameter is not part of a valid questipon");
       return false;
     }
 
     if (answers[parameter] == null) {
-      print("$parameter has no result");
       return false;
     }
     QuestionType questionType = formQuestionFormat.questionType;
