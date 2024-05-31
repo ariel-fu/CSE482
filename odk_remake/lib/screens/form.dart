@@ -90,7 +90,7 @@ class FormPageState extends State<Form> {
               Padding(
                 padding: EdgeInsets.symmetric(
                     horizontal: 20), // Add horizontal padding
-                child: Center(child: Text(question.label)),
+                child: Center(child: Text(question.label ?? '')),
               ),
               Padding(padding: EdgeInsets.symmetric(vertical: 10)),
               Padding(

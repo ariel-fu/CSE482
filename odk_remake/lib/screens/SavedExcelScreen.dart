@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for accessing clipboard
 import 'package:odk_remake/models/excel_file.dart';
+import 'package:odk_remake/screens/settings.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
 import 'form.dart' as odk_remake;
@@ -188,10 +189,6 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                   value: 'local',
                   child: Text('Get from Local Storage'),
                 ),
-                PopupMenuItem<String>(
-                  value: 'url',
-                  child: Text('null'),
-                ),
               ];
             },
           ),
@@ -223,6 +220,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               }
               return ElevatedButton.icon(
                 onPressed: () {
+                  TTSUtil.speak(buttonText);
                   if (index == 0) {
                     Navigator.push(context, 
                       MaterialPageRoute(builder: (context) => ListButtons(type: 'Drafts', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
@@ -279,6 +277,9 @@ class _ListButtonsState extends State<ListButtons> {
             builder: (context) => (odk_remake.Form(excelFile: file))));
   }
 
+  
+
+
   @override
   Widget build(BuildContext context) {
     List<ExcelFile> filteredFiles = widget.savedFiles.where((file) {
@@ -311,6 +312,7 @@ class _ListButtonsState extends State<ListButtons> {
                 deleteExcelFile(file);
                 widget.savedFiles.remove(file);
               });
+              TTSUtil.speak("${file.name} dismissed");
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text("${file.name} dismissed"),
@@ -329,9 +331,14 @@ class _ListButtonsState extends State<ListButtons> {
             ),
             child: ListTile(
               title: Text(file.name),
+              onTap: () {
+                TTSUtil.speak("Opening ${file.name}");
+                _startForm(file);
+              },
               trailing: IconButton(
                 icon: Icon(Icons.arrow_forward),
                 onPressed: () {
+                  TTSUtil.speak("Opening ${file.name}");
                   _startForm(file);
                 },
               ),
@@ -342,3 +349,5 @@ class _ListButtonsState extends State<ListButtons> {
     );
   }
 }
+
+
