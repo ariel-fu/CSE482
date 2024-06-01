@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -10,14 +11,20 @@ import 'package:flutter/cupertino.dart';
 import 'package:odk_remake/screens/SavedExcelScreen.dart';
 
 import 'package:odk_remake/services/parseData.dart';
-import 'package:survey_kit/survey_kit.dart' as survey_kit;
-import 'package:survey_kit/src/steps/step.dart' as surveystep;
+// import 'package:survey_kit/survey_kit.dart' as survey_kit;
+// import 'package:survey_kit/src/steps/step.dart' as surveystep;
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Form extends StatefulWidget {
   final ExcelFile excelFile; // Add this
+  final Map<String, dynamic> answers;
 
-  const Form({Key? key, required this.excelFile})
-      : super(key: key); // Modify this
+  const Form(
+      {super.key,
+      required this.excelFile,
+      required this.answers}); // Modify this
 
   // This widget is the root of your application.
   @override
@@ -29,11 +36,11 @@ class FormPageState extends State<Form> {
   // Order is automatically maintained
   static Map<String, FormQuestionFormat> formFormats = {};
   List<int> surveySteps = [];
-  Map<String, String> surveyResponse = {};
+  Map<String, dynamic> surveyResponse = {};
   String surveyResultsText = '';
-  static bool isDraft = false;
+  // static bool isDraft =
   int currentQuestionIndex = 0;
-  Map<String, dynamic> answers = {};
+  // Map<String, dynamic> answers = {};
   int surveyIndex = 0;
   bool isFinished = false;
   static Map<String, FormQuestionFormat> getFormFormats() {
@@ -113,7 +120,7 @@ class FormPageState extends State<Form> {
                     return Container();
                   }
                   String key = questions.elementAt(questionIndex).name;
-                  
+                  print(key);
                   return Padding(
                     padding: EdgeInsets.symmetric(
                         horizontal: 20), // Add horizontal padding
@@ -129,7 +136,7 @@ class FormPageState extends State<Form> {
                         subtitle: Padding(
                           padding: EdgeInsets.symmetric(
                               horizontal: 20), // Add horizontal padding
-                          child: Text(answers[key].toString()),
+                          child: Text(widget.answers[key].toString()),
                         ),
                       ),
                     ),
@@ -142,15 +149,168 @@ class FormPageState extends State<Form> {
                     MainAxisAlignment.spaceEvenly, // Center the buttons
                 children: <Widget>[
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       // Add your save as draft functionality here
+
+                      TextEditingController textController =
+                          TextEditingController();
+
+                      Future<String?> showPopupTextBox(
+                          BuildContext context) async {
+                        return await showDialog<String>(
+                          context: context,
+                          // barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Enter Text'),
+                              content: TextField(
+                                controller: textController,
+                                decoration: InputDecoration(
+                                    hintText: 'Enter your text here'),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () async {
+                                    final SharedPreferences prefs =
+                                        await SharedPreferences.getInstance();
+
+                                    List<String> savedFileNames =
+                                        prefs.getStringList('savedFileNames') ??
+                                            [];
+
+                                    if (savedFileNames
+                                            .contains(textController.text) &&
+                                        widget.excelFile.name ==
+                                            textController.text) {
+                                      Navigator.of(context)
+                                          .pop(textController.text);
+                                      // Show an error dialog
+                                    } else if (savedFileNames
+                                        .contains(textController.text)) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text('Error'),
+                                            content: Text(
+                                                'File name already exists.'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('OK'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    } else if (textController.text == "") {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text('Error'),
+                                            content: Text(
+                                                'File name cannot be empty.'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('OK'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    } else {
+                                      Navigator.of(context)
+                                          .pop(textController.text);
+                                    }
+                                  },
+                                  child: Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
+
+                      Future<void> saveAnswers(
+                          Map<String, dynamic> answers) async {
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
+
+                        print(widget.answers.entries
+                            .map((e) => '${e.key}:${e.value}')
+                            .toList());
+                        await prefs.setStringList(
+                            "drafts",
+                            widget.answers.entries
+                                .map((e) => '${e.key}:${e.value}')
+                                .toList());
+                      }
+
+                      Future<void> addExcelFile() async {
+                        final SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
+
+                        String? filePath = widget.excelFile.path;
+
+                        String? enteredText = await showPopupTextBox(context);
+
+                        String? fileName;
+                        if (enteredText != null) {
+                          fileName = enteredText;
+                        } else {
+                          return;
+                        }
+
+                        if (filePath != null &&
+                            fileName != widget.excelFile.name) {
+                          try {
+                            File file = File(filePath);
+                            // List<int> bytes = await file.readAsBytes();
+
+                            // Save the file to app directory
+                            Directory appDirectory =
+                                await getApplicationDocumentsDirectory();
+                            String savedFilePath =
+                                '${appDirectory.path}/$fileName';
+                            await file.copy(savedFilePath);
+
+                            List<String> savedFileNames =
+                                prefs.getStringList('savedFileNames') ?? [];
+                            savedFileNames.add(fileName);
+                            await prefs.setStringList(
+                                'savedFileNames', savedFileNames);
+
+                            await prefs.setString(fileName, 'draft');
+
+                            if (widget.excelFile.status == "draft") {
+                              deleteExcelFile(widget.excelFile);
+                            }
+                          } catch (e) {
+                            print('Error saving file: $e');
+                          }
+                        } else {
+                          print('Error: File name or path are null');
+                        }
+
+                        print("saved file");
+                      }
+
+                      saveAnswers(widget.answers);
+                      await addExcelFile();
+
                       Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => SavedExcelScreen(),
                               settings: RouteSettings(arguments: {
                                 'isDraft': true,
-                                'surveyResponses': answers
+                                'surveyResponses': widget.answers
                               })));
                     },
                     child: Text('Save as Draft'),
@@ -164,7 +324,7 @@ class FormPageState extends State<Form> {
                               builder: (context) => SavedExcelScreen(),
                               settings: RouteSettings(arguments: {
                                 'isDraft': false,
-                                'surveyResponses': answers
+                                'surveyResponses': widget.answers
                               })));
                     },
                     child: Text('Send Form'),
@@ -243,9 +403,9 @@ class FormPageState extends State<Form> {
       case QuestionType.Note:
         return _buildTextInput(question.name);
       case QuestionType.Integer:
-        return _buildTextInput(question.name);
+        return _buildNumericInput(question.name);
       case QuestionType.Numeric:
-        return _buildTextInput(question.name);
+        return _buildNumericInput(question.name);
       case QuestionType.Date:
         return _buildDateInput(question.name);
       case QuestionType.Time:
@@ -265,14 +425,31 @@ class FormPageState extends State<Form> {
 
   Widget _buildTextInput(String name) {
     TextEditingController controller =
-        TextEditingController(text: answers[name]);
+        TextEditingController(text: widget.answers[name]);
 
     return Center(
       child: TextField(
         key: ValueKey(name),
         controller: controller,
         onChanged: (value) {
-          answers[name] = value;
+          widget.answers[name] = value;
+        },
+      ),
+    );
+  }
+
+  // Same as text input but makes sure it's a number and not letters
+  Widget _buildNumericInput(String name) {
+    TextEditingController controller =
+        TextEditingController(text: widget.answers[name]);
+
+    return Center(
+      child: TextField(
+        key: ValueKey(name),
+        controller: controller,
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+        onChanged: (value) {
+          widget.answers[name] = value;
         },
       ),
     );
@@ -280,7 +457,9 @@ class FormPageState extends State<Form> {
 
   DateTime? selectedDate;
   Widget _buildDateInput(String name) {
-    selectedDate = answers[name] as DateTime?;
+    // print(name);
+    // print(widget.answers);
+    selectedDate = DateTime.tryParse(widget.answers[name]);
 
     return ElevatedButton(
       key: ValueKey(name),
@@ -292,10 +471,11 @@ class FormPageState extends State<Form> {
           firstDate: DateTime(2000),
           lastDate: DateTime(2050),
         );
-        if (pickedDate != null && pickedDate != selectedDate) {
+        if (pickedDate != null) {
           setState(() {
             selectedDate = pickedDate;
-            answers[name] = pickedDate;
+            widget.answers[name] = pickedDate.toString();
+            // print(widget.answers);
           });
         }
       },
@@ -304,7 +484,18 @@ class FormPageState extends State<Form> {
 
   TimeOfDay? selectedTime;
   Widget _buildTimeInput(String name) {
-    selectedTime = answers[name] as TimeOfDay?;
+    // Remove "TimeOfDay(" from the beginning and ")" from the end
+
+    // Split the remaining string into hours and minutes
+    List<String> components = widget.answers[name]
+        .replaceAll("TimeOfDay(", "")
+        .replaceAll(")", "")
+        .split(":");
+    int hours = int.parse(components[0]);
+    int minutes = int.parse(components[1]);
+
+    // Create and return the TimeOfDay object
+    selectedTime = TimeOfDay(hour: hours, minute: minutes);
 
     return ElevatedButton(
       key: ValueKey(name),
@@ -317,7 +508,7 @@ class FormPageState extends State<Form> {
         if (pickedTime != null && pickedTime != selectedTime) {
           setState(() {
             selectedTime = pickedTime;
-            answers[name] = pickedTime;
+            widget.answers[name] = pickedTime.toString();
           });
         }
       },
@@ -326,8 +517,7 @@ class FormPageState extends State<Form> {
 
   String? selectedChoice;
   Widget _buildSingleChoiceInput(String name, List<String> choices) {
-    selectedChoice = answers[name] as String?;
-
+    selectedChoice = widget.answers[name] as String?;
     return Center(
       child: SizedBox(
         width: 500,
@@ -343,7 +533,7 @@ class FormPageState extends State<Form> {
               onChanged: (String? value) {
                 setState(() {
                   selectedChoice = value;
-                  answers[name] = value;
+                  widget.answers[name] = value;
                 });
               },
             );
@@ -355,7 +545,7 @@ class FormPageState extends State<Form> {
 
   Map<String, bool> values = {};
   Widget _buildMultiChoiceInput(String name, List<String> choices) {
-    List<String> selectedChoices = answers[name] as List<String>? ?? [];
+    List<String> selectedChoices = widget.answers[name] as List<String>? ?? [];
 
     for (String choice in choices) {
       values[choice] = selectedChoices.contains(choice);
@@ -374,7 +564,7 @@ class FormPageState extends State<Form> {
               } else {
                 selectedChoices.remove(choice);
               }
-              answers[name] = selectedChoices;
+              widget.answers[name] = selectedChoices;
             });
           },
         );
@@ -413,7 +603,7 @@ class FormPageState extends State<Form> {
       return false;
     }
 
-    if (answers[parameter] == null) {
+    if (widget.answers[parameter] == null) {
       return false;
     }
     QuestionType questionType = formQuestionFormat.questionType;
@@ -421,7 +611,7 @@ class FormPageState extends State<Form> {
     switch (questionType) {
       case QuestionType.Text:
         // Handle text question
-        String result = answers[parameter];
+        String result = widget.answers[parameter];
         print('Text question $result');
         switch (operator) {
           case '=':
@@ -431,7 +621,7 @@ class FormPageState extends State<Form> {
         }
       case QuestionType.Email:
         // Handle email question
-        String result = answers[parameter];
+        String result = widget.answers[parameter];
         print('email question $result');
         switch (operator) {
           case '=':
@@ -442,7 +632,7 @@ class FormPageState extends State<Form> {
         break;
       case QuestionType.Note:
         // Handle note question
-        String result = answers[parameter];
+        String result = widget.answers[parameter];
         print('Note question $result');
         switch (operator) {
           case '=':
@@ -453,7 +643,7 @@ class FormPageState extends State<Form> {
         break;
       case QuestionType.Integer:
         // Handle integer question
-        int result = int.parse(answers[parameter]);
+        int result = int.parse(widget.answers[parameter]);
         int numCompareTo = int.parse(compareTo);
         print('Integer question $result');
         switch (operator) {
@@ -473,7 +663,7 @@ class FormPageState extends State<Form> {
         break;
       case QuestionType.Numeric:
         // Handle numeric question
-        double result = double.parse(answers[parameter]);
+        double result = double.parse(widget.answers[parameter]);
         double numCompareTo = double.parse(compareTo);
 
         print('Numeric question $result');
@@ -495,7 +685,7 @@ class FormPageState extends State<Form> {
         break;
       case QuestionType.Date:
         // Handle date question
-        DateTime result = answers[parameter];
+        DateTime result = widget.answers[parameter];
         DateTime dateCompareTo = DateTime.parse(compareTo);
         print('Date question $result');
         switch (operator) {
@@ -514,7 +704,7 @@ class FormPageState extends State<Form> {
         }
       case QuestionType.Time:
         // Handle time question
-        TimeOfDay todResult = answers[parameter];
+        TimeOfDay todResult = widget.answers[parameter];
         final format = DateFormat.jm();
         TimeOfDay todTimeCompareTo =
             TimeOfDay.fromDateTime(format.parse(compareTo));
@@ -545,7 +735,7 @@ class FormPageState extends State<Form> {
         }
       case QuestionType.SelectOne:
         // Handle select one question
-        String result = answers[parameter];
+        String result = widget.answers[parameter];
         switch (operator) {
           case '=':
             return result == compareTo;
@@ -555,7 +745,7 @@ class FormPageState extends State<Form> {
         break;
       case QuestionType.LikertScale:
         // Handle Likert scale question
-        String result = answers[parameter];
+        String result = widget.answers[parameter];
         switch (operator) {
           case '=':
             return result == compareTo;
@@ -565,7 +755,7 @@ class FormPageState extends State<Form> {
         break;
       case QuestionType.SelectMultiple:
         // Handle select multiple question
-        List<String> results = answers[parameter];
+        List<String> results = widget.answers[parameter];
         // TODO not sure how to deal with this vcase yet
         return true;
         break;

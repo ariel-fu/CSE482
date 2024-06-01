@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "835392626794",
+    "project_id": "odkremake1half",
+    "storage_bucket": "odkremake1half.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:835392626794:android:2883aa84e1b0b872b52a13",
+        "android_client_info": {
+          "package_name": "com.example.odk_remake"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdwn1d3DMVEvK2mrG_5pKoJEMU1IdGmVw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

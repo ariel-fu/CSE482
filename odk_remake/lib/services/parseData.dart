@@ -26,7 +26,6 @@ List<String> parseSelectChoicesString(String listName) {
   return selectChoices;
 }
 
-
 List<TextChoice> parseSelectChoices(String listName) {
   List<TextChoice> selectChoices = [];
   var bytes = File(filePath).readAsBytesSync();

@@ -23,10 +23,15 @@ Future<List<ExcelFile>> loadSavedFiles() async {
   List<ExcelFile> files = [];
   for (var fileName in savedFileNames) {
     Directory directory = await getApplicationDocumentsDirectory();
-    String? status = prefs.getString(fileName); // Load status from SharedPreferences
-  
-    files.add(ExcelFile(name: fileName, path: '${directory.path}/$fileName', status: status ?? 'draft')); // Default to 'draft' if status is null
+    String? status =
+        prefs.getString(fileName); // Load status from SharedPreferences
+
+    files.add(ExcelFile(
+        name: fileName,
+        path: '${directory.path}/$fileName',
+        status: status ?? 'draft')); // Default to 'draft' if status is null
   }
+
   return files;
 }
 
@@ -46,14 +51,15 @@ Future<void> addExcelFile() async {
     if (filePath != null) {
       try {
         File file = File(filePath);
-       // List<int> bytes = await file.readAsBytes();
+        // List<int> bytes = await file.readAsBytes();
 
         // Save the file to app directory
         Directory appDirectory = await getApplicationDocumentsDirectory();
         String savedFilePath = '${appDirectory.path}/$fileName';
         await file.copy(savedFilePath);
 
-        List<String> savedFileNames = prefs.getStringList('savedFileNames') ?? [];
+        List<String> savedFileNames =
+            prefs.getStringList('savedFileNames') ?? [];
         savedFileNames.add(fileName);
         await prefs.setStringList('savedFileNames', savedFileNames);
 
@@ -89,7 +95,6 @@ Future<bool> deleteExcelFile(ExcelFile file) async {
   }
 }
 
-
 Future<void> saveSavedFiles(List<ExcelFile> savedFiles) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -118,4 +123,9 @@ Future<void> markNewExcelFile(ExcelFile file) async {
 Future<void> markSentExcelFile(ExcelFile file) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.setString(file.status, 'sent');
+}
+
+Future<void> changeExcelFileName(ExcelFile file, String name) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString(file.name, name);
 }

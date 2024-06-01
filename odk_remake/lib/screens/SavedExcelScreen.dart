@@ -4,6 +4,7 @@ import 'package:odk_remake/models/excel_file.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
 import 'form.dart' as odk_remake;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SavedExcelScreen extends StatefulWidget {
   @override
@@ -48,12 +49,11 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
 
   void checkDraft(bool isDraft, ExcelFile file) {
     setState(() {
-      if(isDraft) {
+      if (isDraft) {
         file.status = 'draft';
       }
     });
   }
-
 
   void _loadSavedFiles() async {
     _savedFiles = await loadSavedFiles(); // Load saved files from data file
@@ -111,15 +111,16 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   }
 
   // void navigateToForm(ExcelFile file) {
-  //   Navigator.push(context, 
+  //   Navigator.push(context,
   //     //MaterialPageRoute(builder: (context) => Form()));
   // }
 
   // Function to show the URL input dialog
   Future<void> _showURLDialog() async {
-
-    TextEditingController _urlController = TextEditingController(); // Controller for URL input
-    final ClipboardData? clipboardData = await Clipboard.getData('text/plain'); // Get text from clipboard
+    TextEditingController _urlController =
+        TextEditingController(); // Controller for URL input
+    final ClipboardData? clipboardData =
+        await Clipboard.getData('text/plain'); // Get text from clipboard
     String? pastedText = clipboardData?.text;
 
     showDialog(
@@ -136,7 +137,9 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                   hintText: 'Enter URL',
                 ),
               ),
-              if (pastedText != null && pastedText.isNotEmpty) // Show paste option if clipboard has text
+              if (pastedText != null &&
+                  pastedText
+                      .isNotEmpty) // Show paste option if clipboard has text
                 TextButton(
                   onPressed: () {
                     setState(() {
@@ -170,36 +173,34 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
     );
   }
 
-
-
-  @override 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Forms'),
-        actions: [
-          // Replace IconButton with PopupMenuButton
-          PopupMenuButton<String>(
-            icon: Icon(Icons.add), // Set the icon for the dropdown button
-            onSelected: _handleAddAction,
-            itemBuilder: (BuildContext context) {
-              return [
-                PopupMenuItem<String>(
-                  value: 'local',
-                  child: Text('Get from Local Storage'),
-                ),
-                PopupMenuItem<String>(
-                  value: 'url',
-                  child: Text('null'),
-                ),
-              ];
-            },
-          ),
-        ],
-      ),
-      body: 
-        Padding(
-          padding: EdgeInsets.all(20.0), // Add padding from the walls of the screen
+        appBar: AppBar(
+          title: Text('Forms'),
+          actions: [
+            // Replace IconButton with PopupMenuButton
+            PopupMenuButton<String>(
+              icon: Icon(Icons.add), // Set the icon for the dropdown button
+              onSelected: _handleAddAction,
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem<String>(
+                    value: 'local',
+                    child: Text('Get from Local Storage'),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'url',
+                    child: Text('null'),
+                  ),
+                ];
+              },
+            ),
+          ],
+        ),
+        body: Padding(
+          padding:
+              EdgeInsets.all(20.0), // Add padding from the walls of the screen
           child: GridView.count(
             crossAxisCount: 2, // Display 2 buttons in each row
             mainAxisSpacing: 10.0, // Add vertical spacing between buttons
@@ -224,21 +225,50 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               return ElevatedButton.icon(
                 onPressed: () {
                   if (index == 0) {
-                    Navigator.push(context, 
-                      MaterialPageRoute(builder: (context) => ListButtons(type: 'Drafts', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ListButtons(
+                                type: 'Drafts',
+                                savedFiles: _savedFiles,
+                                toggleSelected: _toggleSelected,
+                                selectedFiles: _selectedFiles)));
                   } else if (index == 1) {
-                    Navigator.push(context, 
-                      MaterialPageRoute(builder: (context) => ListButtons(type: 'Completed Forms', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ListButtons(
+                                type: 'Completed Forms',
+                                savedFiles: _savedFiles,
+                                toggleSelected: _toggleSelected,
+                                selectedFiles: _selectedFiles)));
                   } else if (index == 2) {
-                    Navigator.push(context, 
-                      MaterialPageRoute(builder: (context) => ListButtons(type: 'New Forms', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ListButtons(
+                                type: 'New Forms',
+                                savedFiles: _savedFiles,
+                                toggleSelected: _toggleSelected,
+                                selectedFiles: _selectedFiles)));
                   } else if (index == 3) {
-                    Navigator.push(context, 
-                      MaterialPageRoute(builder: (context) => ListButtons(type: 'Sent Forms', savedFiles: _savedFiles, toggleSelected: _toggleSelected, selectedFiles: _selectedFiles)));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ListButtons(
+                                type: 'Sent Forms',
+                                savedFiles: _savedFiles,
+                                toggleSelected: _toggleSelected,
+                                selectedFiles: _selectedFiles)));
                   }
                 },
-                icon: Icon(iconData, color: iconColor,), // Add icon here
-                label: Text(buttonText, style: TextStyle(color: Colors.white)), // Set text color to white
+                icon: Icon(
+                  iconData,
+                  color: iconColor,
+                ), // Add icon here
+                label: Text(buttonText,
+                    style: TextStyle(
+                        color: Colors.white)), // Set text color to white
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 161, 213, 255),
                   shape: RoundedRectangleBorder(
@@ -248,8 +278,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               );
             }),
           ),
-      )
-    );
+        ));
   }
 }
 
@@ -271,12 +300,64 @@ class ListButtons extends StatefulWidget {
 }
 
 class _ListButtonsState extends State<ListButtons> {
+  Future<void> _startForm(ExcelFile file) async {
+    print(widget.type);
 
-  void _startForm(ExcelFile file) {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => (odk_remake.Form(excelFile: file))));
+    print(file.name);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Map<String, dynamic> _loadAnswersFromPrefs(SharedPreferences prefs) {
+      Map<String, dynamic> answers = {};
+
+      List<String>? savedAnswers = prefs.getStringList("drafts");
+
+      if (savedAnswers != null) {
+        for (dynamic answer in savedAnswers) {
+          List<String> splitAnswer = answer.split(":");
+          print(splitAnswer);
+          if (splitAnswer.length == 2) {
+            if (splitAnswer[1].startsWith("[") &&
+                splitAnswer[1].endsWith("]")) {
+              answers[splitAnswer[0]] = splitAnswer[1]
+                  .substring(1, splitAnswer[1].length - 1)
+                  .split(', ');
+            } else {
+              answers[splitAnswer[0]] = splitAnswer[1];
+            }
+          } else {
+            answers[splitAnswer[0]] = splitAnswer.sublist(1).join(':').trim();
+          }
+        }
+      }
+
+      return answers;
+    }
+
+    switch (widget.type) {
+      case 'Drafts':
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => (odk_remake.Form(
+                    excelFile: file, answers: _loadAnswersFromPrefs(prefs)))));
+      case 'Completed Forms':
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    (odk_remake.Form(excelFile: file, answers: {}))));
+      case 'New Forms':
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    (odk_remake.Form(excelFile: file, answers: {}))));
+      case 'Sent Forms':
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    (odk_remake.Form(excelFile: file, answers: {}))));
+    }
   }
 
   @override

@@ -29,7 +29,10 @@ class _StartAFormScreenState extends State<StartAFormScreen> {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => (odk_remake.Form(excelFile: file))));
+            builder: (context) => (odk_remake.Form(
+                  excelFile: file,
+                  answers: {},
+                ))));
   }
 
   @override
