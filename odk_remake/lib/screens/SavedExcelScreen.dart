@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for accessing clipboard
 import 'package:odk_remake/models/excel_file.dart';
 import 'package:odk_remake/screens/settings.dart';
+import 'package:odk_remake/theme/theme_constants.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
 import 'form.dart' as odk_remake;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:odk_remake/theme/theme_manager.dart'; // Import for theme management
 
 class SavedExcelScreen extends StatefulWidget {
   @override
@@ -20,7 +23,6 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   @override
   void initState() {
     _loadSavedFiles();
-    //isDraft = ModalRoute.of(context)!.settings.arguments as bool;
     super.initState();
   }
 
@@ -111,11 +113,6 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
     }
   }
 
-  // void navigateToForm(ExcelFile file) {
-  //   Navigator.push(context,
-  //     //MaterialPageRoute(builder: (context) => Form()));
-  // }
-
   // Function to show the URL input dialog
   Future<void> _showURLDialog() async {
     TextEditingController _urlController =
@@ -138,9 +135,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                   hintText: 'Enter URL',
                 ),
               ),
-              if (pastedText != null &&
-                  pastedText
-                      .isNotEmpty) // Show paste option if clipboard has text
+              if (pastedText != null && pastedText.isNotEmpty)
                 TextButton(
                   onPressed: () {
                     setState(() {
@@ -160,10 +155,8 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
             ),
             TextButton(
               onPressed: () {
-                // Call function to handle getting file from URL
                 String url = _urlController.text;
                 Navigator.of(context).pop();
-                // Call the function to download and add Excel file from URL
                 downloadExcelFileAndAddToStorage(url);
               },
               child: Text('OK'),
@@ -176,24 +169,30 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-<<<<<<< HEAD
+    final themeManager = Provider.of<ThemeManager>(context); 
+
+    return MaterialApp(
+      theme: lightTheme, 
+      darkTheme: darkTheme,
+      themeMode: themeManager.themeMode,
+      home: Scaffold(
         appBar: AppBar(
           title: Text('Forms'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
           actions: [
-            // Replace IconButton with PopupMenuButton
             PopupMenuButton<String>(
-              icon: Icon(Icons.add), // Set the icon for the dropdown button
+              icon: Icon(Icons.add),
               onSelected: _handleAddAction,
               itemBuilder: (BuildContext context) {
                 return [
-                  PopupMenuItem<String>(
+                  const PopupMenuItem<String>(
                     value: 'local',
                     child: Text('Get from Local Storage'),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'url',
-                    child: Text('null'),
                   ),
                 ];
               },
@@ -201,55 +200,34 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
           ],
         ),
         body: Padding(
-          padding:
-              EdgeInsets.all(20.0), // Add padding from the walls of the screen
-=======
-      appBar: AppBar(
-        title: Text('Forms'),
-        actions: [
-          // Replace IconButton with PopupMenuButton
-          PopupMenuButton<String>(
-            icon: Icon(Icons.add), // Set the icon for the dropdown button
-            onSelected: _handleAddAction,
-            itemBuilder: (BuildContext context) {
-              return [
-                PopupMenuItem<String>(
-                  value: 'local',
-                  child: Text('Get from Local Storage'),
-                ),
-              ];
-            },
-          ),
-        ],
-      ),
-      body: 
-        Padding(
-          padding: EdgeInsets.all(20.0), // Add padding from the walls of the screen
->>>>>>> 4eb1fc36b0e97729474c6b550978ef2d93db4599
+          padding: EdgeInsets.all(20.0),
           child: GridView.count(
-            crossAxisCount: 2, // Display 2 buttons in each row
-            mainAxisSpacing: 10.0, // Add vertical spacing between buttons
-            crossAxisSpacing: 10.0, // Add horizontal spacing between buttons
+            crossAxisCount: 2,
+            mainAxisSpacing: 10.0,
+            crossAxisSpacing: 10.0,
             children: List.generate(4, (index) {
               IconData iconData = Icons.article_rounded;
               String buttonText = '';
-              Color iconColor = Colors.white;
+              Color buttonTextColor = Colors.white;
               if (index == 0) {
                 iconData = Icons.article_rounded;
                 buttonText = 'Drafts';
+                buttonTextColor = Colors.white;
               } else if (index == 1) {
                 iconData = Icons.check_circle_rounded;
                 buttonText = 'Completed';
+                buttonTextColor = Colors.white;
               } else if (index == 2) {
                 iconData = Icons.edit;
                 buttonText = 'New';
+                buttonTextColor = Colors.white;
               } else if (index == 3) {
                 iconData = Icons.send;
                 buttonText = 'Sent';
+                buttonTextColor = Colors.white;
               }
               return ElevatedButton.icon(
                 onPressed: () {
-                  //TTSUtil.speak(buttonText);
                   if (index == 0) {
                     Navigator.push(
                         context,
@@ -288,23 +266,23 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                                 selectedFiles: _selectedFiles)));
                   }
                 },
-                icon: Icon(
-                  iconData,
-                  color: iconColor,
-                ), // Add icon here
-                label: Text(buttonText,
-                    style: TextStyle(
-                        color: Colors.white)), // Set text color to white
+                icon: Icon(iconData),
+                label: Text(
+                  buttonText,
+                  style: TextStyle(color: buttonTextColor),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 161, 213, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
+                  iconColor: Colors.white,
                 ),
               );
             }),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
 
@@ -327,22 +305,15 @@ class ListButtons extends StatefulWidget {
 
 class _ListButtonsState extends State<ListButtons> {
   Future<void> _startForm(ExcelFile file) async {
-    print(widget.type);
-
-    print(file.name);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     Map<String, dynamic> _loadAnswersFromPrefs(SharedPreferences prefs) {
       Map<String, dynamic> answers = {};
-
       List<String>? savedAnswers = prefs.getStringList("drafts");
-
       if (savedAnswers != null) {
         for (dynamic answer in savedAnswers) {
           List<String> splitAnswer = answer.split(":");
-          print(splitAnswer);
           if (splitAnswer.length == 2) {
-            if (splitAnswer[1].startsWith("[") &&
-                splitAnswer[1].endsWith("]")) {
+            if (splitAnswer[1].startsWith("[") && splitAnswer[1].endsWith("]")) {
               answers[splitAnswer[0]] = splitAnswer[1]
                   .substring(1, splitAnswer[1].length - 1)
                   .split(', ');
@@ -354,7 +325,6 @@ class _ListButtonsState extends State<ListButtons> {
           }
         }
       }
-
       return answers;
     }
 
@@ -365,29 +335,18 @@ class _ListButtonsState extends State<ListButtons> {
             MaterialPageRoute(
                 builder: (context) => (odk_remake.Form(
                     excelFile: file, answers: _loadAnswersFromPrefs(prefs)))));
+        break;
       case 'Completed Forms':
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    (odk_remake.Form(excelFile: file, answers: {}))));
       case 'New Forms':
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    (odk_remake.Form(excelFile: file, answers: {}))));
       case 'Sent Forms':
         Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) =>
                     (odk_remake.Form(excelFile: file, answers: {}))));
+        break;
     }
   }
-
-  
-
 
   @override
   Widget build(BuildContext context) {
@@ -421,7 +380,6 @@ class _ListButtonsState extends State<ListButtons> {
                 deleteExcelFile(file);
                 widget.savedFiles.remove(file);
               });
-              //TTSUtil.speak("${file.name} dismissed");
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text("${file.name} dismissed"),
@@ -441,13 +399,11 @@ class _ListButtonsState extends State<ListButtons> {
             child: ListTile(
               title: Text(file.name),
               onTap: () {
-                //TTSUtil.speak("Opening ${file.name}");
                 _startForm(file);
               },
               trailing: IconButton(
                 icon: Icon(Icons.arrow_forward),
                 onPressed: () {
-                  //TTSUtil.speak("Opening ${file.name}");
                   _startForm(file);
                 },
               ),
@@ -458,5 +414,3 @@ class _ListButtonsState extends State<ListButtons> {
     );
   }
 }
-
-

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:odk_remake/theme/theme_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:provider/provider.dart';
 
 class TTSUtil {
   static final FlutterTts _flutterTts = FlutterTts();
@@ -50,17 +52,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    
+    final themeManager = Provider.of<ThemeManager>(context);
+
     return Scaffold(
       appBar: AppBar(title: Text('Settings')),
       body: Center(
-        child: SwitchListTile(
-          title: Text('Enable Text to Speech'),
-          value: _isTTSEnabled,
-          onChanged: (bool value) {
-            _updateTTSSetting(value);
-          },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SwitchListTile(
+              title: Text('Enable Text to Speech'),
+              value: _isTTSEnabled,
+              onChanged: (bool value) {
+                _updateTTSSetting(value);
+              },
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Add the functionality
+                print('Button pressed');
+              },
+              child: Text('New Button'),
+            ),
+            SwitchListTile(
+              title: Text('Dark Mode'),
+              value: themeManager.themeMode == ThemeMode.dark,
+              onChanged: (bool value) {
+                themeManager.toggleTheme(value);
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

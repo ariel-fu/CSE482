@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for accessing clipboard
+import 'package:provider/provider.dart'; // Import provider package
 import 'package:odk_remake/models/excel_file.dart';
 import 'package:odk_remake/screens/SavedExcelScreen.dart';
 import 'package:odk_remake/screens/settings.dart';
+import 'package:odk_remake/theme/theme_constants.dart';
+import 'package:odk_remake/theme/theme_manager.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
 import '../screens/StartAFormScreen.dart';
@@ -36,11 +38,13 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context); // Access ThemeManager
+
     return MaterialApp(
       title: 'Home Page',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeManager.themeMode,
       home: _HomePage(
         title: 'Home Page',
         navigateToSavedExcelScreen: _navigateToSavedExcelScreen,
@@ -57,15 +61,37 @@ class _HomePage extends StatelessWidget {
   final void Function(BuildContext) navigateToStartAFormScreen;
   final void Function(BuildContext) navigateToSettingsScreen;
 
-  const _HomePage({Key? key, required this.title, required this.navigateToSavedExcelScreen, required this.navigateToSettingsScreen, required this.navigateToStartAFormScreen}) : super(key: key);
+  const _HomePage({
+    Key? key,
+    required this.title,
+    required this.navigateToSavedExcelScreen,
+    required this.navigateToSettingsScreen,
+    required this.navigateToStartAFormScreen,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final List<ButtonData> buttons = [
-      ButtonData(icon: Icons.folder, label: 'Files', onTap: () => navigateToSavedExcelScreen(context)),
-      ButtonData(icon: Icons.add_circle, label: 'Start a form', onTap: () => navigateToStartAFormScreen(context),),
-      ButtonData(icon: Icons.settings, label: 'Settings', onTap: () => navigateToSettingsScreen(context),),
-      ButtonData(icon: Icons.insert_drive_file, label: 'Blank', destinationPage: BlankScreen()),
+      ButtonData(
+        icon: Icons.folder,
+        label: 'Files',
+        onTap: () => navigateToSavedExcelScreen(context),
+      ),
+      ButtonData(
+        icon: Icons.add_circle,
+        label: 'Start a form',
+        onTap: () => navigateToStartAFormScreen(context),
+      ),
+      ButtonData(
+        icon: Icons.settings,
+        label: 'Settings',
+        onTap: () => navigateToSettingsScreen(context),
+      ),
+      ButtonData(
+        icon: Icons.insert_drive_file,
+        label: 'Blank',
+        destinationPage: BlankScreen(),
+      ),
     ];
 
     return Scaffold(
@@ -79,13 +105,19 @@ class _HomePage extends StatelessWidget {
   }
 }
 
+
 class ButtonData {
   final IconData icon;
   final String label;
   final Widget? destinationPage;
   final void Function()? onTap;
 
-  ButtonData({required this.icon, required this.label, this.destinationPage, this.onTap});
+  ButtonData({
+    required this.icon,
+    required this.label,
+    this.destinationPage,
+    this.onTap,
+  });
 }
 
 class ButtonGrid extends StatelessWidget {
@@ -107,7 +139,6 @@ class ButtonGrid extends StatelessWidget {
             icon: Icon(buttonData.icon, color: Colors.white),
             label: Text(buttonData.label, style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 161, 213, 255),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20.0),
               ),
@@ -118,10 +149,6 @@ class ButtonGrid extends StatelessWidget {
     );
   }
 }
-
-
-
-
 
 class BlankScreen extends StatelessWidget {
   @override
