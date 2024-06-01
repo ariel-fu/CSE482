@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for accessing clipboard
 import 'package:odk_remake/models/excel_file.dart';
+import 'package:odk_remake/screens/settings.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
 import 'form.dart' as odk_remake;
@@ -176,6 +177,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
         appBar: AppBar(
           title: Text('Forms'),
           actions: [
@@ -201,6 +203,29 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
         body: Padding(
           padding:
               EdgeInsets.all(20.0), // Add padding from the walls of the screen
+=======
+      appBar: AppBar(
+        title: Text('Forms'),
+        actions: [
+          // Replace IconButton with PopupMenuButton
+          PopupMenuButton<String>(
+            icon: Icon(Icons.add), // Set the icon for the dropdown button
+            onSelected: _handleAddAction,
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'local',
+                  child: Text('Get from Local Storage'),
+                ),
+              ];
+            },
+          ),
+        ],
+      ),
+      body: 
+        Padding(
+          padding: EdgeInsets.all(20.0), // Add padding from the walls of the screen
+>>>>>>> 4eb1fc36b0e97729474c6b550978ef2d93db4599
           child: GridView.count(
             crossAxisCount: 2, // Display 2 buttons in each row
             mainAxisSpacing: 10.0, // Add vertical spacing between buttons
@@ -224,6 +249,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               }
               return ElevatedButton.icon(
                 onPressed: () {
+                  //TTSUtil.speak(buttonText);
                   if (index == 0) {
                     Navigator.push(
                         context,
@@ -360,6 +386,9 @@ class _ListButtonsState extends State<ListButtons> {
     }
   }
 
+  
+
+
   @override
   Widget build(BuildContext context) {
     List<ExcelFile> filteredFiles = widget.savedFiles.where((file) {
@@ -392,6 +421,7 @@ class _ListButtonsState extends State<ListButtons> {
                 deleteExcelFile(file);
                 widget.savedFiles.remove(file);
               });
+              //TTSUtil.speak("${file.name} dismissed");
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text("${file.name} dismissed"),
@@ -410,9 +440,14 @@ class _ListButtonsState extends State<ListButtons> {
             ),
             child: ListTile(
               title: Text(file.name),
+              onTap: () {
+                //TTSUtil.speak("Opening ${file.name}");
+                _startForm(file);
+              },
               trailing: IconButton(
                 icon: Icon(Icons.arrow_forward),
                 onPressed: () {
+                  //TTSUtil.speak("Opening ${file.name}");
                   _startForm(file);
                 },
               ),
@@ -423,3 +458,5 @@ class _ListButtonsState extends State<ListButtons> {
     );
   }
 }
+
+
