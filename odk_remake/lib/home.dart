@@ -35,7 +35,8 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context); // Access ThemeManager
+    final themeManager =
+        Provider.of<ThemeManager>(context); // Access ThemeManager
 
     return MaterialApp(
       title: 'Home Page',
@@ -102,7 +103,6 @@ class _HomePage extends StatelessWidget {
   }
 }
 
-
 class ButtonData {
   final IconData icon;
   final String label;
@@ -134,7 +134,8 @@ class ButtonGrid extends StatelessWidget {
           return ElevatedButton.icon(
             onPressed: buttonData.onTap ?? () {},
             icon: Icon(buttonData.icon, color: Colors.white),
-            label: Text(buttonData.label, style: TextStyle(color: Colors.white)),
+            label:
+                Text(buttonData.label, style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20.0),

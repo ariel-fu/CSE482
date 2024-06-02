@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:odk_remake/theme/theme_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-
+// import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -20,7 +19,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
   }
 
-  
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
