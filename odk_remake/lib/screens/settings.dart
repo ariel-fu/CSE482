@@ -31,12 +31,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: EdgeInsets.all(16.0),
         children: [
           SwitchListTile(
-            title: Text('Go to accessibility settings'),
-            value: _isTTSEnabled,
-            onChanged: (bool value) {
-            },
-          ),
-          SwitchListTile(
             title: Text('Dark Mode'),
             value: themeManager.themeMode == ThemeMode.dark,
             onChanged: (bool value) {
