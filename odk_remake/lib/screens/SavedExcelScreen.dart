@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for accessing clipboard
 import 'package:odk_remake/models/excel_file.dart';
 import 'package:odk_remake/screens/completed.dart';
+import 'package:odk_remake/screens/settings.dart';
 // import 'package:odk_remake/screens/settings.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
@@ -146,13 +147,13 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Enter URL'),
+          title: const Text('Enter URL'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _urlController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Enter URL',
                 ),
               ),
@@ -163,7 +164,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                       _urlController.text = pastedText!;
                     });
                   },
-                  child: Text('Paste'),
+                  child: const Text('Paste'),
                 ),
             ],
           ),
@@ -172,7 +173,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -182,13 +183,21 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                 // Call the function to download and add Excel file from URL
                 downloadExcelFileAndAddToStorage(url);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
       },
     );
   }
+
+  void _navigateToSettingsScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SettingsScreen()),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -199,17 +208,12 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
       themeMode: themeManager.themeMode,
       home: Scaffold(
           appBar: AppBar(
-            title: Text('Forms'),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
+            title: const Text('Home'),
+            
             actions: [
               // Replace IconButton with PopupMenuButton
               PopupMenuButton<String>(
-                icon: Icon(Icons.add), // Set the icon for the dropdown button
+                icon: const Icon(Icons.add), // Set the icon for the dropdown button
                 onSelected: _handleAddAction,
                 itemBuilder: (BuildContext context) {
                   return [
@@ -220,10 +224,14 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                   ];
                 },
               ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () => _navigateToSettingsScreen(context),
+              ),
             ],
           ),
           body: Padding(
-            padding: EdgeInsets.all(
+            padding: const EdgeInsets.all(
                 20.0), // Add padding from the walls of the screen
             child: GridView.count(
               crossAxisCount: 2, // Display 2 buttons in each row
@@ -408,7 +416,15 @@ class _ListButtonsState extends State<ListButtons> {
     }).toList();
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false ,
         title: Text(widget.type),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home), onPressed: () { 
+              Navigator.popUntil(context, (route) => route.isFirst);
+             },
+          )
+        ]
       ),
       body: ListView.builder(
         itemCount: filteredFiles.length,
@@ -426,15 +442,15 @@ class _ListButtonsState extends State<ListButtons> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text("${file.name} dismissed"),
-                  duration: Duration(seconds: 2),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             },
             background: Container(
               color: Colors.red,
               alignment: Alignment.centerRight,
-              padding: EdgeInsets.symmetric(horizontal: 20.0),
-              child: Icon(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: const Icon(
                 Icons.delete,
                 color: Colors.white,
               ),
@@ -451,7 +467,7 @@ class _ListButtonsState extends State<ListButtons> {
                 _startForm(file);
               },
               trailing: IconButton(
-                icon: Icon(Icons.arrow_forward),
+                icon: const Icon(Icons.arrow_forward),
                 onPressed: () {
                   //TTSUtil.speak("Opening ${file.name}");
                   _startForm(file);
