@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for accessing clipboard
 import 'package:odk_remake/models/excel_file.dart';
+import 'package:odk_remake/screens/completed.dart';
+// import 'package:odk_remake/screens/settings.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
 import 'form.dart' as odk_remake;
@@ -15,12 +19,24 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   List<ExcelFile> _savedFiles = [];
   List<ExcelFile> _selectedFiles = [];
   bool isDraft = false;
+  late Timer _timer; // Timer instance
 
   @override
   void initState() {
     _loadSavedFiles();
-    //isDraft = ModalRoute.of(context)!.settings.arguments as bool;
+    // Start the timer to periodically call _loadSavedFiles()
+    // _timer = Timer.periodic(Duration(seconds: 15), (timer) {
+    //   _loadSavedFiles();
+    setState(() {});
+    // });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    // Cancel the timer when the widget is disposed to avoid memory leaks
+    _timer.cancel();
+    super.dispose();
   }
 
   void _markDraftExcel(ExcelFile file) {
@@ -189,10 +205,6 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                     value: 'local',
                     child: Text('Get from Local Storage'),
                   ),
-                  PopupMenuItem<String>(
-                    value: 'url',
-                    child: Text('null'),
-                  ),
                 ];
               },
             ),
@@ -224,6 +236,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               }
               return ElevatedButton.icon(
                 onPressed: () {
+                  //TTSUtil.speak(buttonText);
                   if (index == 0) {
                     Navigator.push(
                         context,
@@ -301,30 +314,29 @@ class ListButtons extends StatefulWidget {
 
 class _ListButtonsState extends State<ListButtons> {
   Future<void> _startForm(ExcelFile file) async {
-    print(widget.type);
-
-    print(file.name);
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> _loadAnswersFromPrefs(SharedPreferences prefs) {
+    Map<String, dynamic> loadAnswersFromPrefs(SharedPreferences prefs) {
       Map<String, dynamic> answers = {};
 
-      List<String>? savedAnswers = prefs.getStringList("drafts");
+      List<String>? savedAnswers =
+          prefs.getStringList("answers of ${file.name}");
 
       if (savedAnswers != null) {
-        for (dynamic answer in savedAnswers) {
+        for (String answer in savedAnswers) {
           List<String> splitAnswer = answer.split(":");
-          print(splitAnswer);
-          if (splitAnswer.length == 2) {
-            if (splitAnswer[1].startsWith("[") &&
-                splitAnswer[1].endsWith("]")) {
-              answers[splitAnswer[0]] = splitAnswer[1]
-                  .substring(1, splitAnswer[1].length - 1)
-                  .split(', ');
+          if (splitAnswer.length >= 2) {
+            // Changed to >= 2 to handle multiple colons correctly
+            String key = splitAnswer[0];
+            String value = splitAnswer
+                .sublist(1)
+                .join(':')
+                .trim(); // Join back the split values
+
+            if (value.startsWith("[") && value.endsWith("]")) {
+              answers[key] = value.substring(1, value.length - 1).split(', ');
             } else {
-              answers[splitAnswer[0]] = splitAnswer[1];
+              answers[key] = value;
             }
-          } else {
-            answers[splitAnswer[0]] = splitAnswer.sublist(1).join(':').trim();
           }
         }
       }
@@ -338,13 +350,13 @@ class _ListButtonsState extends State<ListButtons> {
             context,
             MaterialPageRoute(
                 builder: (context) => (odk_remake.Form(
-                    excelFile: file, answers: _loadAnswersFromPrefs(prefs)))));
+                    excelFile: file, answers: loadAnswersFromPrefs(prefs)))));
       case 'Completed Forms':
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) =>
-                    (odk_remake.Form(excelFile: file, answers: {}))));
+                builder: (context) => (Completed(
+                    excelFile: file, answers: loadAnswersFromPrefs(prefs)))));
       case 'New Forms':
         Navigator.push(
             context,
@@ -355,8 +367,8 @@ class _ListButtonsState extends State<ListButtons> {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) =>
-                    (odk_remake.Form(excelFile: file, answers: {}))));
+                builder: (context) => (Completed(
+                    excelFile: file, answers: loadAnswersFromPrefs(prefs)))));
     }
   }
 
@@ -367,7 +379,7 @@ class _ListButtonsState extends State<ListButtons> {
         case 'Drafts':
           return file.status == 'draft';
         case 'Completed Forms':
-          return file.status == 'completed';
+          return file.status == 'completed' || file.status == 'waiting';
         case 'New Forms':
           return file.status == 'new';
         case 'Sent Forms':
@@ -392,6 +404,7 @@ class _ListButtonsState extends State<ListButtons> {
                 deleteExcelFile(file);
                 widget.savedFiles.remove(file);
               });
+              //TTSUtil.speak("${file.name} dismissed");
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text("${file.name} dismissed"),
@@ -409,10 +422,20 @@ class _ListButtonsState extends State<ListButtons> {
               ),
             ),
             child: ListTile(
-              title: Text(file.name),
+              title: Text(
+                file.name,
+                style: TextStyle(
+                  color: file.status == 'waiting' ? Colors.red : null,
+                ),
+              ),
+              onTap: () {
+                //TTSUtil.speak("Opening ${file.name}");
+                _startForm(file);
+              },
               trailing: IconButton(
                 icon: Icon(Icons.arrow_forward),
                 onPressed: () {
+                  //TTSUtil.speak("Opening ${file.name}");
                   _startForm(file);
                 },
               ),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -17,12 +18,45 @@ class ExcelFile {
 }
 
 Future<List<ExcelFile>> loadSavedFiles() async {
+  print("how often is this called?");
+  Set<String> fileNamesInFirebase = {};
+  Future<void> getAllFiles() async {
+    try {
+      // Query the Firestore collection to get all files
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection('completed').get();
+
+      // Iterate over the documents in the query snapshot
+      for (QueryDocumentSnapshot documentSnapshot in querySnapshot.docs) {
+        // Access the document ID (name)
+        String documentId = documentSnapshot.id;
+        fileNamesInFirebase.add(documentId);
+        // Access the data of each document
+        Object? data = documentSnapshot.data();
+        // Do something with the data, for example, print it along with the document ID
+        print('Document ID: $documentId, Data: $data');
+      }
+    } catch (e) {
+      print('Error getting files: $e');
+    }
+  }
+
+  try {
+    final result = await InternetAddress.lookup('example.com');
+    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+      await getAllFiles();
+    }
+  } on SocketException catch (_) {}
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   List<String>? savedFileNames = prefs.getStringList('savedFileNames') ?? [];
 
   List<ExcelFile> files = [];
   for (var fileName in savedFileNames) {
     Directory directory = await getApplicationDocumentsDirectory();
+
+    if (fileNamesInFirebase.contains(fileName)) {
+      await prefs.setString(fileName, "sent");
+    }
     String? status =
         prefs.getString(fileName); // Load status from SharedPreferences
 

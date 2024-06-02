@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -120,7 +122,6 @@ class FormPageState extends State<Form> {
                     return Container();
                   }
                   String key = questions.elementAt(questionIndex).name;
-                  print(key);
                   return Padding(
                     padding: EdgeInsets.symmetric(
                         horizontal: 20), // Add horizontal padding
@@ -136,7 +137,14 @@ class FormPageState extends State<Form> {
                         subtitle: Padding(
                           padding: EdgeInsets.symmetric(
                               horizontal: 20), // Add horizontal padding
-                          child: Text(widget.answers[key].toString()),
+
+                          child: Text(
+                            widget.answers[key].toString().startsWith("[") &&
+                                    widget.answers[key].toString().endsWith("]")
+                                ? widget.answers[key].toString().substring(1,
+                                    widget.answers[key].toString().length - 1)
+                                : widget.answers[key].toString(),
+                          ),
                         ),
                       ),
                     ),
@@ -152,158 +160,7 @@ class FormPageState extends State<Form> {
                     onPressed: () async {
                       // Add your save as draft functionality here
 
-                      TextEditingController textController =
-                          TextEditingController();
-
-                      Future<String?> showPopupTextBox(
-                          BuildContext context) async {
-                        return await showDialog<String>(
-                          context: context,
-                          // barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('Enter Text'),
-                              content: TextField(
-                                controller: textController,
-                                decoration: InputDecoration(
-                                    hintText: 'Enter your text here'),
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () async {
-                                    final SharedPreferences prefs =
-                                        await SharedPreferences.getInstance();
-
-                                    List<String> savedFileNames =
-                                        prefs.getStringList('savedFileNames') ??
-                                            [];
-
-                                    if (savedFileNames
-                                            .contains(textController.text) &&
-                                        widget.excelFile.name ==
-                                            textController.text) {
-                                      Navigator.of(context)
-                                          .pop(textController.text);
-                                      // Show an error dialog
-                                    } else if (savedFileNames
-                                        .contains(textController.text)) {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: Text('Error'),
-                                            content: Text(
-                                                'File name already exists.'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Text('OK'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    } else if (textController.text == "") {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: Text('Error'),
-                                            content: Text(
-                                                'File name cannot be empty.'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Text('OK'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    } else {
-                                      Navigator.of(context)
-                                          .pop(textController.text);
-                                    }
-                                  },
-                                  child: Text('OK'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-
-                      Future<void> saveAnswers(
-                          Map<String, dynamic> answers) async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-
-                        print(widget.answers.entries
-                            .map((e) => '${e.key}:${e.value}')
-                            .toList());
-                        await prefs.setStringList(
-                            "drafts",
-                            widget.answers.entries
-                                .map((e) => '${e.key}:${e.value}')
-                                .toList());
-                      }
-
-                      Future<void> addExcelFile() async {
-                        final SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-
-                        String? filePath = widget.excelFile.path;
-
-                        String? enteredText = await showPopupTextBox(context);
-
-                        String? fileName;
-                        if (enteredText != null) {
-                          fileName = enteredText;
-                        } else {
-                          return;
-                        }
-
-                        if (filePath != null &&
-                            fileName != widget.excelFile.name) {
-                          try {
-                            File file = File(filePath);
-                            // List<int> bytes = await file.readAsBytes();
-
-                            // Save the file to app directory
-                            Directory appDirectory =
-                                await getApplicationDocumentsDirectory();
-                            String savedFilePath =
-                                '${appDirectory.path}/$fileName';
-                            await file.copy(savedFilePath);
-
-                            List<String> savedFileNames =
-                                prefs.getStringList('savedFileNames') ?? [];
-                            savedFileNames.add(fileName);
-                            await prefs.setStringList(
-                                'savedFileNames', savedFileNames);
-
-                            await prefs.setString(fileName, 'draft');
-
-                            if (widget.excelFile.status == "draft") {
-                              deleteExcelFile(widget.excelFile);
-                            }
-                          } catch (e) {
-                            print('Error saving file: $e');
-                          }
-                        } else {
-                          print('Error: File name or path are null');
-                        }
-
-                        print("saved file");
-                      }
-
-                      saveAnswers(widget.answers);
-                      await addExcelFile();
-
+                      await handleFormSubmit("draft");
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -316,8 +173,24 @@ class FormPageState extends State<Form> {
                     child: Text('Save as Draft'),
                   ),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       // Add your send form functionality here
+                      await handleFormSubmit("completed");
+
+                      // await Firebase.initializeApp();
+                      // Future<void> sendSurveyAnswers() {
+                      //   Map<String, dynamic> data = {};
+                      //   for (dynamic key in widget.answers.keys) {
+                      //     data[key] = widget.answers[key];
+                      //   }
+                      //   return FirebaseFirestore.instance
+                      //       .collection('drafts')
+                      //       .doc(widget.excelFile.name)
+                      //       .set(data);
+                      // }
+
+                      // sendSurveyAnswers();
+
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -327,7 +200,7 @@ class FormPageState extends State<Form> {
                                 'surveyResponses': widget.answers
                               })));
                     },
-                    child: Text('Send Form'),
+                    child: Text('Mark Form Completed'),
                   ),
                 ],
               )
@@ -457,9 +330,9 @@ class FormPageState extends State<Form> {
 
   DateTime? selectedDate;
   Widget _buildDateInput(String name) {
-    // print(name);
-    // print(widget.answers);
-    selectedDate = DateTime.tryParse(widget.answers[name]);
+    selectedDate = widget.answers[name] != null
+        ? DateTime.tryParse(widget.answers[name])
+        : null;
 
     return ElevatedButton(
       key: ValueKey(name),
@@ -475,7 +348,6 @@ class FormPageState extends State<Form> {
           setState(() {
             selectedDate = pickedDate;
             widget.answers[name] = pickedDate.toString();
-            // print(widget.answers);
           });
         }
       },
@@ -487,15 +359,19 @@ class FormPageState extends State<Form> {
     // Remove "TimeOfDay(" from the beginning and ")" from the end
 
     // Split the remaining string into hours and minutes
-    List<String> components = widget.answers[name]
-        .replaceAll("TimeOfDay(", "")
-        .replaceAll(")", "")
-        .split(":");
-    int hours = int.parse(components[0]);
-    int minutes = int.parse(components[1]);
+    if (widget.answers[name] != null) {
+      List<String> components = widget.answers[name]
+          .replaceAll("TimeOfDay(", "")
+          .replaceAll(")", "")
+          .split(":");
+
+      selectedTime = TimeOfDay(
+          hour: int.parse(components[0]), minute: int.parse(components[1]));
+    } else {
+      selectedTime = null;
+    }
 
     // Create and return the TimeOfDay object
-    selectedTime = TimeOfDay(hour: hours, minute: minutes);
 
     return ElevatedButton(
       key: ValueKey(name),
@@ -766,5 +642,133 @@ class FormPageState extends State<Form> {
     }
 
     return true;
+  }
+
+  Future<void> handleFormSubmit(String statusType) async {
+    TextEditingController textController = TextEditingController();
+
+    Future<String?> showPopupTextBox(BuildContext context) async {
+      return await showDialog<String>(
+        context: context,
+        // barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Enter Survey Name'),
+            content: TextField(
+              controller: textController,
+              decoration: InputDecoration(hintText: 'Enter Survey Name Here'),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () async {
+                  final SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+
+                  List<String> savedFileNames =
+                      prefs.getStringList('savedFileNames') ?? [];
+
+                  if (savedFileNames.contains(textController.text) &&
+                      widget.excelFile.name == textController.text) {
+                    Navigator.of(context).pop(textController.text);
+                    // Show an error dialog
+                  } else if (savedFileNames.contains(textController.text)) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Error'),
+                          content: Text('File name already exists.'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else if (textController.text == "") {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Error'),
+                          content: Text('File name cannot be empty.'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    Navigator.of(context).pop(textController.text);
+                  }
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    String? enteredText = await showPopupTextBox(context);
+    Future<void> saveAnswers(Map<String, dynamic> answers) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      await prefs.setStringList("answers of ${enteredText}",
+          widget.answers.entries.map((e) => '${e.key}:${e.value}').toList());
+    }
+
+    Future<void> addExcelFile() async {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      String? filePath = widget.excelFile.path;
+
+      String? fileName;
+      if (enteredText != null) {
+        fileName = enteredText;
+      } else {
+        return;
+      }
+
+      if ((filePath != null && fileName != widget.excelFile.name) ||
+          statusType == "completed") {
+        try {
+          File file = File(filePath);
+          // List<int> bytes = await file.readAsBytes();
+
+          // Save the file to app directory
+          Directory appDirectory = await getApplicationDocumentsDirectory();
+          String savedFilePath = '${appDirectory.path}/$fileName';
+          await file.copy(savedFilePath);
+
+          List<String> savedFileNames =
+              prefs.getStringList('savedFileNames') ?? [];
+          savedFileNames.add(fileName);
+          await prefs.setStringList('savedFileNames', savedFileNames);
+
+          await prefs.setString(fileName, statusType);
+
+          if (widget.excelFile.status == "draft") {
+            deleteExcelFile(widget.excelFile);
+          }
+        } catch (e) {
+          print('Error saving file: $e');
+        }
+      } else {
+        print('Error: File name or path are null');
+      }
+    }
+
+    await addExcelFile();
+    saveAnswers(widget.answers);
   }
 }
