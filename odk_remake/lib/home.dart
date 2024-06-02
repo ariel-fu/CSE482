@@ -13,7 +13,6 @@ class Home extends StatelessWidget {
   const Home({Key? key}) : super(key: key);
 
   void _navigateToSavedExcelScreen(BuildContext context) {
-    TTSUtil.speak('You have navigated to the Saved Excel Files screen');
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SavedExcelScreen()),
@@ -21,7 +20,6 @@ class Home extends StatelessWidget {
   }
 
   void _navigateToStartAFormScreen(BuildContext context) {
-    TTSUtil.speak('You have navigated to the Start a Form screen');
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => StartAFormScreen()),
@@ -29,7 +27,6 @@ class Home extends StatelessWidget {
   }
 
   void _navigateToSettingsScreen(BuildContext context) {
-    TTSUtil.speak('You have navigated to the Settings screen');
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SettingsScreen()),
@@ -153,7 +150,6 @@ class ButtonGrid extends StatelessWidget {
 class BlankScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    TTSUtil.speak('You have navigated to the Blank screen');
     return Scaffold(
       appBar: AppBar(title: Text('Blank')),
       body: Center(child: Text('Blank Page')),

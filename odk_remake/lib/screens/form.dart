@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:odk_remake/theme/theme_constants.dart';
+import 'package:odk_remake/theme/theme_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -91,6 +93,11 @@ class FormPageState extends State<Form> {
             LinearProgressIndicator(
               value: progress,
               semanticsLabel: 'Survey progress',
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).brightness == Brightness.dark
+                  ? COLOR_PRIMARY_DARK
+                  : COLOR_PRIMARY_LIGHT,
+              ),
             ),
             if (!isFinished && isRelevant) ...[
               Padding(padding: EdgeInsets.symmetric(vertical: 20)),
@@ -544,33 +551,37 @@ class FormPageState extends State<Form> {
   }
 
   Map<String, bool> values = {};
-  Widget _buildMultiChoiceInput(String name, List<String> choices) {
-    List<String> selectedChoices = widget.answers[name] as List<String>? ?? [];
+Widget _buildMultiChoiceInput(String name, List<String> choices) {
+  List<String> selectedChoices = widget.answers[name] as List<String>? ?? [];
 
-    for (String choice in choices) {
-      values[choice] = selectedChoices.contains(choice);
-    }
+  return Column(
+    children: choices.map((choice) {
+      return Builder(
+        builder: (context) {
+          return CheckboxListTile(
+            title: Text(choice),
+            value: selectedChoices.contains(choice),
+            onChanged: (bool? value) {
+              setState(() {
+                if (value == true) {
+                  selectedChoices.add(choice);
+                } else {
+                  selectedChoices.remove(choice);
+                }
+                widget.answers[name] = selectedChoices;
+              });
+            },
+            selectedTileColor: Provider.of<ThemeManager>(context).themeMode ==
+                    ThemeMode.dark
+                ? COLOR_PRIMARY_DARK
+                : COLOR_PRIMARY_LIGHT,
+          );
+        },
+      );
+    }).toList(),
+  );
+}
 
-    return Column(
-      children: choices.map((choice) {
-        return CheckboxListTile(
-          title: Text(choice),
-          value: values[choice],
-          onChanged: (bool? value) {
-            setState(() {
-              values[choice] = value!;
-              if (values[choice] == true) {
-                selectedChoices.add(choice);
-              } else {
-                selectedChoices.remove(choice);
-              }
-              widget.answers[name] = selectedChoices;
-            });
-          },
-        );
-      }).toList(),
-    );
-  }
 
   String parseRelevantParameter(String input) {
     RegExp exp = RegExp(r'\{(.*?)\}');

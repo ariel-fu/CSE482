@@ -16,6 +16,11 @@ ThemeData lightTheme = ThemeData(
       textStyle: WidgetStateProperty.all<TextStyle>(const TextStyle(color: Colors.white))
     ),
   ),
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    backgroundColor: COLOR_PRIMARY_LIGHT,
+    extendedTextStyle: TextStyle(color: Colors.white),
+    foregroundColor: Colors.white,
+  ),
 );
 
 // Define the dark theme
@@ -28,4 +33,10 @@ ThemeData darkTheme = ThemeData(
       textStyle: WidgetStateProperty.all<TextStyle>(const TextStyle(color: Colors.white))
     ),
   ),
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    backgroundColor: COLOR_PRIMARY_DARK,
+    extendedTextStyle: TextStyle(color: Colors.white),
+    foregroundColor: Colors.white,
+  ),
+  
 );
