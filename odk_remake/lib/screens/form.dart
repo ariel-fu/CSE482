@@ -88,7 +88,8 @@ class FormPageState extends State<Form> {
       appBar: AppBar(
         title: Text('Survey'),
       ),
-      body: SingleChildScrollView(
+      body: Expanded(
+        child: SingleChildScrollView(
         child: Column(
           children: [
             // Add the progress bar at the top of the column
@@ -158,7 +159,7 @@ class FormPageState extends State<Form> {
                   );
                 },
               ),
-              Padding(padding: EdgeInsets.symmetric(vertical: 20)),
+              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
               Row(
                 mainAxisAlignment:
                     MainAxisAlignment.spaceEvenly, // Center the buttons
@@ -210,10 +211,13 @@ class FormPageState extends State<Form> {
                     child: Text('Mark Form Completed'),
                   ),
                 ],
-              )
-            ]
+              ),
+
+            ],
+
           ],
         ),
+      ),
       ),
       floatingActionButton: isFinished
           ? null
