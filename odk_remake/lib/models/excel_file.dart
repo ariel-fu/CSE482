@@ -18,7 +18,6 @@ class ExcelFile {
 }
 
 Future<List<ExcelFile>> loadSavedFiles() async {
-  print("how often is this called?");
   Set<String> fileNamesInFirebase = {};
   Future<void> getAllFiles() async {
     try {
@@ -32,9 +31,6 @@ Future<List<ExcelFile>> loadSavedFiles() async {
         String documentId = documentSnapshot.id;
         fileNamesInFirebase.add(documentId);
         // Access the data of each document
-        Object? data = documentSnapshot.data();
-        // Do something with the data, for example, print it along with the document ID
-        print('Document ID: $documentId, Data: $data');
       }
     } catch (e) {
       print('Error getting files: $e');

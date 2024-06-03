@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for accessing clipboard
 import 'package:odk_remake/models/excel_file.dart';
 import 'package:odk_remake/screens/completed.dart';
+import 'package:odk_remake/screens/settings.dart';
 // import 'package:odk_remake/screens/settings.dart';
 import '../widgets/excel_item.dart';
 import '../services/url_download.dart';
@@ -12,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:odk_remake/theme/theme_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:odk_remake/theme/theme_manager.dart';
+import 'package:flutter/material.dart';
 
 class SavedExcelScreen extends StatefulWidget {
   @override
@@ -28,10 +30,10 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
   void initState() {
     _loadSavedFiles();
     // Start the timer to periodically call _loadSavedFiles()
-    // _timer = Timer.periodic(Duration(seconds: 15), (timer) {
-    //   _loadSavedFiles();
-    setState(() {});
-    // });
+    _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
+       _loadSavedFiles();
+       setState(() {});
+    });
     super.initState();
   }
 
@@ -146,13 +148,13 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Enter URL'),
+          title: const Text('Enter URL'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _urlController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Enter URL',
                 ),
               ),
@@ -163,7 +165,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                       _urlController.text = pastedText!;
                     });
                   },
-                  child: Text('Paste'),
+                  child: const Text('Paste'),
                 ),
             ],
           ),
@@ -172,7 +174,7 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -182,13 +184,21 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                 // Call the function to download and add Excel file from URL
                 downloadExcelFileAndAddToStorage(url);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
       },
     );
   }
+
+  void _navigateToSettingsScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SettingsScreen()),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -199,17 +209,12 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
       themeMode: themeManager.themeMode,
       home: Scaffold(
           appBar: AppBar(
-            title: Text('Forms'),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
+            title: const Text('Home'),
+            
             actions: [
               // Replace IconButton with PopupMenuButton
               PopupMenuButton<String>(
-                icon: Icon(Icons.add), // Set the icon for the dropdown button
+                icon: const Icon(Icons.add), // Set the icon for the dropdown button
                 onSelected: _handleAddAction,
                 itemBuilder: (BuildContext context) {
                   return [
@@ -220,10 +225,14 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                   ];
                 },
               ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () => _navigateToSettingsScreen(context),
+              ),
             ],
           ),
           body: Padding(
-            padding: EdgeInsets.all(
+            padding: const EdgeInsets.all(
                 20.0), // Add padding from the walls of the screen
             child: GridView.count(
               crossAxisCount: 2, // Display 2 buttons in each row
@@ -300,6 +309,10 @@ class _SavedExcelScreenState extends State<SavedExcelScreen> {
                       borderRadius: BorderRadius.circular(20.0),
                     ),
                     iconColor: Colors.white,
+                    shadowColor: themeManager.themeMode == ThemeMode.dark 
+                    ? Colors.white.withOpacity(0.5) 
+                    : Colors.black.withOpacity(0.5),
+                    elevation: 5.0,
                   ),
                 );
               }),
@@ -390,30 +403,62 @@ class _ListButtonsState extends State<ListButtons> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    List<ExcelFile> filteredFiles = widget.savedFiles.where((file) {
-      switch (widget.type) {
-        case 'Drafts':
-          return file.status == 'draft';
-        case 'Completed Forms':
-          return file.status == 'completed' || file.status == 'waiting';
-        case 'New Forms':
-          return file.status == 'new';
-        case 'Sent Forms':
-          return file.status == 'sent';
-        default:
-          return false;
-      }
-    }).toList();
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.type),
-      ),
-      body: ListView.builder(
+@override
+Widget build(BuildContext context) {
+  final theme = Theme.of(context); // Access the current theme
+
+  List<ExcelFile> filteredFiles = widget.savedFiles.where((file) {
+    switch (widget.type) {
+      case 'Drafts':
+        return file.status == 'draft';
+      case 'Completed Forms':
+        return file.status == 'completed' || file.status == 'waiting';
+      case 'New Forms':
+        return file.status == 'new';
+      case 'Sent Forms':
+        return file.status == 'sent';
+      default:
+        return false;
+    }
+  }).toList();
+
+  return Scaffold(
+    appBar: AppBar(
+      automaticallyImplyLeading: false,
+      title: Text(widget.type),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.home),
+          onPressed: () {
+            Navigator.popUntil(context, (route) => route.isFirst);
+          },
+        )
+      ]
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ListView.separated(
         itemCount: filteredFiles.length,
+        separatorBuilder: (context, index) => Divider(),
         itemBuilder: (context, index) {
           ExcelFile file = filteredFiles[index];
+          String buttonLabel;
+
+          // Determine the button label based on the file status
+          switch (file.status) {
+            case 'draft':
+              buttonLabel = 'Continue';
+              break;
+            case 'completed':
+            case 'waiting':
+              buttonLabel = 'Continue';
+              break;
+            case 'sent':
+              buttonLabel = 'View';
+              break;
+            default:
+              buttonLabel = 'Start';
+          }
 
           return Dismissible(
             key: Key(file.name),
@@ -422,45 +467,76 @@ class _ListButtonsState extends State<ListButtons> {
                 deleteExcelFile(file);
                 widget.savedFiles.remove(file);
               });
-              //TTSUtil.speak("${file.name} dismissed");
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("${file.name} dismissed"),
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              if (mounted) { // Check if the widget is mounted before calling showSnackBar
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("${file.name} dismissed"),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
             },
             background: Container(
               color: Colors.red,
               alignment: Alignment.centerRight,
-              padding: EdgeInsets.symmetric(horizontal: 20.0),
-              child: Icon(
-                Icons.delete,
-                color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Icon(
+                    Icons.delete,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'Delete',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: ListTile(
-              title: Text(
-                file.name,
-                style: TextStyle(
-                  color: file.status == 'waiting' ? Colors.red : null,
-                ),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8.0),
               ),
-              onTap: () {
-                //TTSUtil.speak("Opening ${file.name}");
-                _startForm(file);
-              },
-              trailing: IconButton(
-                icon: Icon(Icons.arrow_forward),
-                onPressed: () {
-                  //TTSUtil.speak("Opening ${file.name}");
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              child: ListTile(
+                leading: Icon(Icons.insert_drive_file),
+                title: Text(
+                  file.name,
+                  style: TextStyle(
+                    color: file.status == 'waiting' ? Colors.red : null,
+                  ),
+                ),
+                subtitle: Text(
+                  file.status,
+                  style: TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+                onTap: () {
                   _startForm(file);
                 },
+                trailing: ElevatedButton(
+                  onPressed: () {
+                    _startForm(file);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.primaryColor, // Use the theme's button color
+                  ),
+                  child: Text(buttonLabel),
+                ),
               ),
             ),
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

@@ -90,134 +90,120 @@ class FormPageState extends State<Form> {
       ),
       body: Expanded(
         child: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Add the progress bar at the top of the column
-            LinearProgressIndicator(
-              value: progress,
-              semanticsLabel: 'Survey progress',
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).brightness == Brightness.dark
-                  ? COLOR_PRIMARY_DARK
-                  : COLOR_PRIMARY_LIGHT,
+          child: Column(
+            children: [
+              // Add the progress bar at the top of the column
+              LinearProgressIndicator(
+                value: progress,
+                semanticsLabel: 'Survey progress',
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? COLOR_PRIMARY_DARK
+                      : COLOR_PRIMARY_LIGHT,
+                ),
               ),
-            ),
-            if (!isFinished && isRelevant) ...[
-              Padding(padding: EdgeInsets.symmetric(vertical: 20)),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: 20), // Add horizontal padding
-                child: Center(child: Text(question.label ?? '')),
-              ),
-              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: 20), // Add horizontal padding
-                child: Center(child: _getQuestionInput(question)),
-              ),
-            ],
+              if (!isFinished && isRelevant) ...[
+                Padding(padding: EdgeInsets.symmetric(vertical: 20)),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 20), // Add horizontal padding
+                  child: Center(child: Text(question.label ?? '')),
+                ),
+                Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 20), // Add horizontal padding
+                  child: Center(child: _getQuestionInput(question)),
+                ),
+              ],
 
-            if (isFinished) ...[
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: formFormats.length,
-                itemBuilder: (context, index) {
-                  if (index >= surveySteps.length) {
-                    return Container();
-                  }
-                  int questionIndex = surveySteps.elementAt(index);
-                  if (questionIndex >= questions.length) {
-                    return Container();
-                  }
-                  String key = questions.elementAt(questionIndex).name;
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 20), // Add horizontal padding
-                    child: Card(
-                      child: ListTile(
-                        title: Padding(
-                            padding:
-                                EdgeInsets.all(8), // Add horizontal padding
-                            child: Text(formFormats[key]!.label,
-                                style: TextStyle(
-                                    fontSize: 20.0,
-                                    fontWeight: FontWeight.bold))),
-                        subtitle: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 20), // Add horizontal padding
+              if (isFinished) ...[
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: formFormats.length,
+                  itemBuilder: (context, index) {
+                    if (index >= surveySteps.length) {
+                      return Container();
+                    }
+                    int questionIndex = surveySteps.elementAt(index);
+                    if (questionIndex >= questions.length) {
+                      return Container();
+                    }
+                    String key = questions.elementAt(questionIndex).name;
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20), // Add horizontal padding
+                      child: Card(
+                        child: ListTile(
+                          title: Padding(
+                              padding:
+                                  EdgeInsets.all(8), // Add horizontal padding
+                              child: Text(formFormats[key]!.label,
+                                  style: TextStyle(
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.bold))),
+                          subtitle: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20), // Add horizontal padding
 
-                          child: Text(
-                            widget.answers[key].toString().startsWith("[") &&
-                                    widget.answers[key].toString().endsWith("]")
-                                ? widget.answers[key].toString().substring(1,
-                                    widget.answers[key].toString().length - 1)
-                                : widget.answers[key].toString(),
+                            child: Text(
+                              widget.answers[key].toString().startsWith("[") &&
+                                      widget.answers[key]
+                                          .toString()
+                                          .endsWith("]")
+                                  ? widget.answers[key].toString().substring(1,
+                                      widget.answers[key].toString().length - 1)
+                                  : widget.answers[key].toString(),
+                            ),
                           ),
                         ),
                       ),
+                    );
+                  },
+                ),
+                Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+                Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceEvenly, // Center the buttons
+                  children: <Widget>[
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Add your save as draft functionality here
+
+                        await handleFormSubmit("draft");
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SavedExcelScreen(),
+                                settings: RouteSettings(arguments: {
+                                  'isDraft': true,
+                                  'surveyResponses': widget.answers
+                                })));
+                      },
+                      child: Text('Save as Draft'),
                     ),
-                  );
-                },
-              ),
-              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-              Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceEvenly, // Center the buttons
-                children: <Widget>[
-                  ElevatedButton(
-                    onPressed: () async {
-                      // Add your save as draft functionality here
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Add your send form functionality here
+                        await handleFormSubmit("completed");
 
-                      await handleFormSubmit("draft");
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SavedExcelScreen(),
-                              settings: RouteSettings(arguments: {
-                                'isDraft': true,
-                                'surveyResponses': widget.answers
-                              })));
-                    },
-                    child: Text('Save as Draft'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      // Add your send form functionality here
-                      await handleFormSubmit("completed");
-
-                      // await Firebase.initializeApp();
-                      // Future<void> sendSurveyAnswers() {
-                      //   Map<String, dynamic> data = {};
-                      //   for (dynamic key in widget.answers.keys) {
-                      //     data[key] = widget.answers[key];
-                      //   }
-                      //   return FirebaseFirestore.instance
-                      //       .collection('drafts')
-                      //       .doc(widget.excelFile.name)
-                      //       .set(data);
-                      // }
-
-                      // sendSurveyAnswers();
-
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SavedExcelScreen(),
-                              settings: RouteSettings(arguments: {
-                                'isDraft': false,
-                                'surveyResponses': widget.answers
-                              })));
-                    },
-                    child: Text('Mark Form Completed'),
-                  ),
-                ],
-              ),
-
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SavedExcelScreen(),
+                                settings: RouteSettings(arguments: {
+                                  'isDraft': false,
+                                  'surveyResponses': widget.answers
+                                })));
+                      },
+                      child: Text('Mark Form Completed'),
+                    ),
+                  ],
+                ),
+              ],
             ],
-
-          ],
+          ),
         ),
-      ),
       ),
       floatingActionButton: isFinished
           ? null
@@ -431,37 +417,36 @@ class FormPageState extends State<Form> {
   }
 
   Map<String, bool> values = {};
-Widget _buildMultiChoiceInput(String name, List<String> choices) {
-  List<String> selectedChoices = widget.answers[name] as List<String>? ?? [];
+  Widget _buildMultiChoiceInput(String name, List<String> choices) {
+    List<String> selectedChoices = widget.answers[name] as List<String>? ?? [];
 
-  return Column(
-    children: choices.map((choice) {
-      return Builder(
-        builder: (context) {
-          return CheckboxListTile(
-            title: Text(choice),
-            value: selectedChoices.contains(choice),
-            onChanged: (bool? value) {
-              setState(() {
-                if (value == true) {
-                  selectedChoices.add(choice);
-                } else {
-                  selectedChoices.remove(choice);
-                }
-                widget.answers[name] = selectedChoices;
-              });
-            },
-            selectedTileColor: Provider.of<ThemeManager>(context).themeMode ==
-                    ThemeMode.dark
-                ? COLOR_PRIMARY_DARK
-                : COLOR_PRIMARY_LIGHT,
-          );
-        },
-      );
-    }).toList(),
-  );
-}
-
+    return Column(
+      children: choices.map((choice) {
+        return Builder(
+          builder: (context) {
+            return CheckboxListTile(
+              title: Text(choice),
+              value: selectedChoices.contains(choice),
+              onChanged: (bool? value) {
+                setState(() {
+                  if (value == true) {
+                    selectedChoices.add(choice);
+                  } else {
+                    selectedChoices.remove(choice);
+                  }
+                  widget.answers[name] = selectedChoices;
+                });
+              },
+              selectedTileColor:
+                  Provider.of<ThemeManager>(context).themeMode == ThemeMode.dark
+                      ? COLOR_PRIMARY_DARK
+                      : COLOR_PRIMARY_LIGHT,
+            );
+          },
+        );
+      }).toList(),
+    );
+  }
 
   String parseRelevantParameter(String input) {
     RegExp exp = RegExp(r'\{(.*?)\}');
@@ -754,8 +739,7 @@ Widget _buildMultiChoiceInput(String name, List<String> choices) {
         return;
       }
 
-      if ((filePath != null && fileName != widget.excelFile.name) ||
-          statusType == "completed") {
+      if ((fileName != widget.excelFile.name) || statusType == "completed") {
         try {
           File file = File(filePath);
           // List<int> bytes = await file.readAsBytes();
@@ -773,7 +757,7 @@ Widget _buildMultiChoiceInput(String name, List<String> choices) {
           await prefs.setString(fileName, statusType);
 
           if (widget.excelFile.status == "draft") {
-            deleteExcelFile(widget.excelFile);
+            await deleteExcelFile(widget.excelFile);
           }
         } catch (e) {
           print('Error saving file: $e');
@@ -784,6 +768,6 @@ Widget _buildMultiChoiceInput(String name, List<String> choices) {
     }
 
     await addExcelFile();
-    saveAnswers(widget.answers);
+    await saveAnswers(widget.answers);
   }
 }
