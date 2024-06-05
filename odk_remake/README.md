@@ -8,9 +8,9 @@ In the realm of global health, Information and Computing Technologies (ICT) have
 
 ## Implementation
 The majority of code written for this project is in the 'lib' folder where it is then subdivided further. 
-Models -> form question and excel file formats
-Screens -> start, complete, home, settings, etc.
-Services -> parse data, user services
-Theme -> for dark mode
-Widgets -> excel item
+- Models -> form question and excel file formats
+- Screens -> start, complete, home, settings, etc.
+- Services -> parse data, user services
+- Theme -> for dark mode
+- Widgets -> excel item
 
